@@ -1,0 +1,7 @@
+Enzo Arata
+Zachary Mcilwain
+
+
+In order to manage our databases we have a vector of structs named dataBases that holds 3 data type. An int that we use for indexing, a string for the name of the dataBase and a Vector of structs of type Tables that has two data types, an integer for number of arguments and a vector of strings for table names.
+
+We essentially have a vector of databases that each have a corresponding vector of table. In this way we can check what dataBases exist and which tables exist in which database. This way we know if a database already exists or if a table in a given database already exists. We file input into a vector of strings. We then have a function to parse the string into tokens exlcuding spaces, we then analyze those tokens to figure out what command is being run. Based on the command we have a series of functions to create and drop(push/pop) our vectors of data bases and tables. We also have functions to select from tables to print their corresponding data, as well as an add function that can add data to tables. We have an additional string parser that is used to create the tokens for our tables, (arg char[20] , arg float). 
