@@ -551,11 +551,31 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 				}
 				if(tokens[2].at(0) == '>' )
 				{
-					
+					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
+					{
+						
+						if(tokens[3] > databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j])
+						{
+							
+							changes++;
+							databaseList[useIndex].tables[tableSelected].tableValues.erase(databaseList[useIndex].tables[tableSelected].tableValues.begin()+g);
+							databaseList[useIndex].tables[tableSelected].valuesInserted--;
+						}
+					}
 				}
 				if(tokens[2].at(0) == '<' )
 				{
-					
+					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
+					{
+						
+						if(tokens[3] < databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j])
+						{
+							
+							changes++;
+							databaseList[useIndex].tables[tableSelected].tableValues.erase(databaseList[useIndex].tables[tableSelected].tableValues.begin()+g);
+							databaseList[useIndex].tables[tableSelected].valuesInserted--;
+						}
+					}
 				}
 				
 

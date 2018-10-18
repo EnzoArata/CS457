@@ -39,7 +39,7 @@ delete from Product
 where name = 'Gizmo';
 
 delete from Product 
-where price > 150;
+where price < 150;
 
 select * from Product;
 
