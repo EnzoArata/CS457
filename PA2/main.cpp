@@ -14,7 +14,9 @@
 #include <cstring>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <functional>
+#include <cctype>
+#include <algorithm> 
 
 using namespace std;
 
@@ -37,6 +39,7 @@ bool insert(vector <string> tokens);
 bool selectFrom(vector <string> tokens);
 bool deleteFrom(string tableName, vector <string> tokens );
 bool deleteQuery(int tableSelected, vector <string> tokens);
+bool update(string tableName, vector <string> tokens );
 
 
 string removeFrontSpaces(string cleanString);
@@ -76,7 +79,7 @@ int main( int argc, char *argv[] ){
 	vector <string> commands;
 	string tempName;
 	vector <string> input;
-
+	string::size_type sz; 
     ifstream inFile;
 	//inFile = fopen(argv[2],"r");
     inFile.open(argv[1]);
@@ -122,36 +125,48 @@ int main( int argc, char *argv[] ){
 		{
 			use(commands[1]);
 		}
-		else if (commands[0] == "SELECT")
+		/*else if (commands[0] == "SELECT")
 		{
             selectFrom(commands[3]);
-		}
+		}*/
 		else if (commands[0] == "ALTER")
 		{
             add(commands);
 		}
-		else if (commands[0] == "insert")
+		else if (commands[0] == "INSERT")
 		{
 			
-            if (commands[1] == "into")
+            if (commands[1] == "INTO")
             {
             	insert(commands);
             }
 		}
-		else if (commands[0] == "select")
+		else if (commands[0] == "SELECT")
 		{
 
 			
             if (commands[1] == "*")
             {
-            	if (commands[2] == "from")
+            	if (commands[2] == "FROM")
            		{
 
             		selectFrom(commands);
            		}
             }
 		}
-		else if (commands[0] == "delete")
+		else if (commands[0] == "DELETE")
+		{
+
+			
+            if (commands[1] == "FROM")
+            {
+            	i++;
+            	tempName = commands[2];
+            	commands = commandParse(input[i]);
+            	deleteFrom(tempName, commands);
+            }
+		}
+		else if (commands[0] == "UPDATE")
 		{
 
 			
@@ -173,6 +188,13 @@ int main( int argc, char *argv[] ){
 			//cout << "-- Command not recognized" << endl;
 		}
 	}
+	/*string s = "149.99";
+	float tempFloat;
+	transform(s.begin(), s.end(), s.begin(), std::ptr_fun<int, int>(std::toupper));
+	tempFloat = stof (s ,&sz);
+	cout << s << endl;
+	cout << tempFloat << endl;*/
+	
 
 }
 //Parses string by making new strings where there are spaces
@@ -181,9 +203,15 @@ vector<string> commandParse(string commandLine){
 	string chopped;
 	int i;
 	int cursor = 0;
+	
+ 	string s="";
+ 	
+
 	for(i=0; i<commandLine.size(); i++){
 		if (commandLine.at(i)==' '){
-			commands.push_back(commandLine.substr(cursor,i-cursor));
+			s = commandLine.substr(cursor,i-cursor);
+			transform(s.begin(), s.end(), s.begin(), std::ptr_fun<int, int>(std::toupper));
+			commands.push_back(s);
 			cursor=i+1;
 
 		}
@@ -307,6 +335,7 @@ bool argumentParse(string t_arg)
             completedArg = t_arg.substr(cursor+1, i-cursor-1);
             //cout << useIndex << " " << tableIndex << endl;
             completedArg = removeFrontSpaces(completedArg);
+			transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
             databaseList[useIndex].tables[databaseList[useIndex].tableIndex].args++;
             databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.push_back(completedArg);
             completedArg = "";
@@ -361,6 +390,10 @@ bool selectFrom(string name)
 {
     for(int j =0;j< databaseList[useIndex].tables.size();j++)
     {
+    	name = removeEnd(name);
+    	transform(name.begin(), name.end(), name.begin(), std::ptr_fun<int, int>(std::toupper));
+    	cout << name << " != " << databaseList[useIndex].tables[j].name << endl;
+
         if(name == databaseList[useIndex].tables[j].name)
         {
             cout << "-- " ;
@@ -464,6 +497,8 @@ bool selectFrom(vector <string> tokens)
 {
 	string tempString;
 	tempString = tokens[3].substr(0,tokens[3].size() -1);
+	tempString = removeEnd(tempString);
+	transform(tempString.begin(), tempString.end(), tempString.begin(), std::ptr_fun<int, int>(std::toupper));
 	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
     {
         if(tempString == databaseList[useIndex].tables[i].name)
@@ -492,7 +527,7 @@ bool selectFrom(vector <string> tokens)
 			return 1;
         }
     }
-    cout << "-- !Failed to print table " << tokens[2] << " because it does not exist" << endl;
+    cout << "-- !Failed to print table " << tokens[3] << " because it does not exist" << endl;
     return 0;
 
 }
@@ -501,7 +536,7 @@ bool deleteFrom(string tableName, vector <string> tokens )
 {
 	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
     {
-
+		transform(tableName.begin(), tableName.end(), tableName.begin(), std::ptr_fun<int, int>(std::toupper));
         if(tableName == databaseList[useIndex].tables[i].name)
         {
         	deleteQuery(i, tokens );
@@ -522,7 +557,8 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 	string::size_type sz; 
 	float tempFloat;
 	float tempFloat2;
-	if(tokens[0] == "where")
+
+	if(tokens[0] == "WHERE")
 	{
 		//for(int k=0;k<tokens.size())
 		
@@ -532,7 +568,8 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 			newString = splitString(databaseList[useIndex].tables[tableSelected].arguments[j]);
 			
 			//cout << "beep" << endl;
-			//cout << databaseList[useIndex].tables[tableSelected].arguments[j] <<  endl;
+			//cout << tokens[1] << "-" << newString[0] << endl;
+			transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
 			if(tokens[1] == newString[0])
 			{
 				//cout << "argument recognized " << endl;
@@ -541,6 +578,7 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 				
 				if(tokens[2].at(0) == '=' )
 				{
+
 					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
 					{
 						
@@ -554,6 +592,7 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 						}
 					}
 				}
+				//cout << tokens[2].at(0) << endl;
 				if(tokens[2].at(0) == '>' )
 				{
 					
@@ -569,7 +608,7 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 						tempFloat2 = stof (databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] ,&sz);
 						if(tempFloat < tempFloat2)
 						{
-							cout << "recognized" << endl;
+							
 							changes++;
 							databaseList[useIndex].tables[tableSelected].tableValues.erase(databaseList[useIndex].tables[tableSelected].tableValues.begin()+g);
 							databaseList[useIndex].tables[tableSelected].valuesInserted--;
@@ -577,20 +616,22 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 						}
 						else
 						{
-							cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
-							cout << tokens[3] << endl;
+							//cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+							//cout << tokens[3] << endl;
 						}
 					}
 				}
+				;
 				if(tokens[2].at(0) == '<' )
 				{
-					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
+					for(int g=0; g< databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
 					{
 
 						databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] = removeFrontSpaces(databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j]);
 						//cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
 						tempFloat = stof (tokens[3] ,&sz);
 						tempFloat2 = stof (databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] ,&sz);
+						cout << tempFloat << "-" << tempFloat2 << endl;
 						if(tempFloat > tempFloat2)
 						{
 							
@@ -599,8 +640,15 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 							databaseList[useIndex].tables[tableSelected].valuesInserted--;
 							g=-1;
 						}
+						else
+						{
+							//cout<< databaseList[useIndex].tables[tableSelected].name << endl;
+							//cout << tempFloat << "=" << tempFloat2 << endl;
+						}
+						
 					}
 				}
+				
 				
 
 			}
@@ -614,6 +662,8 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 
 
 	}
+	cout << "-- !Failed to delete from table " << databaseList[useIndex].tables[tableSelected].name << " because no matching query" << endl;
+    return 0;
 }
 string removeFrontSpaces(string cleanString)
 {
@@ -654,6 +704,8 @@ vector <string> splitString(string inputString)
 }
 string removeEnd(string cleanString)
 {
+	if(cleanString.at(cleanString.size()-1) == ';')
 	cleanString = cleanString.substr(0, cleanString.size()-1);
+
 	return cleanString;
 }

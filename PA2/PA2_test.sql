@@ -30,22 +30,26 @@ update Product
 set price = 14.99 
 where name = 'Gizmo';
 
-select * from Product;
+select * from product;
 
 --Delete data (20 points)
-delete from Product 
+delete from product 
 where name = 'PowerGizmo';
 
-delete from Product 
+delete from product 
 where name = 'Gizmo';
 
-delete from Product 
-where price > 1;
+delete from product 
+where price > 175.99;
 
 delete from bepis
-where height > 8;
+where weight = 12;
 
-select * from Product;
+delete from bepis
+where height = 3;
+
+
+select * from product;
 
 select * from bepis;
 
