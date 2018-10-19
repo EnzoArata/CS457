@@ -10,11 +10,12 @@ CREATE TABLE bepis (pid int, weight int, height int, price float);
 --Insert new data (20 points)
 insert into Product values(1,	'Gizmo',      	19.99);
 insert into Product values(2,	'PowerGizmo', 	29.99);
-insert into Product values(3,	'SingleTouch', 	149.99);
+insert into Product values(3,	'SingleTouch',  149.99);
 insert into Product values(4,	'MultiTouch', 	199.99);
 insert into Product values(5,	'SuperGizmo', 	49.99);
 insert into bepis values(1,	2, 3, 	49.99);
-insert into bepis values(2,	12, 9, 	20);
+insert into bepis values(2,	12, 9,       20);
+insert into bepis values(2,	20, 11,       24);
 
 select * from Product;
 
@@ -33,15 +34,20 @@ select * from Product;
 
 --Delete data (20 points)
 delete from Product 
-where name = 'MultiTouch';
+where name = 'PowerGizmo';
 
 delete from Product 
 where name = 'Gizmo';
 
 delete from Product 
-where price < 150;
+where price > 1;
+
+delete from bepis
+where height > 8;
 
 select * from Product;
+
+select * from bepis;
 
 --Query subsets (10 points)
 select name, price 

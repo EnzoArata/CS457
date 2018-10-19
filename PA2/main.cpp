@@ -519,7 +519,9 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 {
 	vector<string> newString;
 	int changes= 0;
-
+	string::size_type sz; 
+	float tempFloat;
+	float tempFloat2;
 	if(tokens[0] == "where")
 	{
 		//for(int k=0;k<tokens.size())
@@ -528,13 +530,15 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 		{
 
 			newString = splitString(databaseList[useIndex].tables[tableSelected].arguments[j]);
+			
 			//cout << "beep" << endl;
 			//cout << databaseList[useIndex].tables[tableSelected].arguments[j] <<  endl;
 			if(tokens[1] == newString[0])
 			{
 				//cout << "argument recognized " << endl;
 				tokens[3] = removeEnd(tokens[3]);
-				//cout << tokens[3] << endl;
+				tokens[3] = removeFrontSpaces(tokens[3]);
+				
 				if(tokens[2].at(0) == '=' )
 				{
 					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
@@ -546,20 +550,35 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 							changes++;
 							databaseList[useIndex].tables[tableSelected].tableValues.erase(databaseList[useIndex].tables[tableSelected].tableValues.begin()+g);
 							databaseList[useIndex].tables[tableSelected].valuesInserted--;
+							g=-1;
 						}
 					}
 				}
 				if(tokens[2].at(0) == '>' )
 				{
+					
 					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
 					{
+
 						
-						if(tokens[3] > databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j])
+						databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] = removeFrontSpaces(databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j]);
+
+						//cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+						//cout << tokens[3] << endl;
+						tempFloat = stof (tokens[3] ,&sz);
+						tempFloat2 = stof (databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] ,&sz);
+						if(tempFloat < tempFloat2)
 						{
-							
+							cout << "recognized" << endl;
 							changes++;
 							databaseList[useIndex].tables[tableSelected].tableValues.erase(databaseList[useIndex].tables[tableSelected].tableValues.begin()+g);
 							databaseList[useIndex].tables[tableSelected].valuesInserted--;
+							g=-1;
+						}
+						else
+						{
+							cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+							cout << tokens[3] << endl;
 						}
 					}
 				}
@@ -567,13 +586,18 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 				{
 					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
 					{
-						
-						if(tokens[3] < databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j])
+
+						databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] = removeFrontSpaces(databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j]);
+						//cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+						tempFloat = stof (tokens[3] ,&sz);
+						tempFloat2 = stof (databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] ,&sz);
+						if(tempFloat > tempFloat2)
 						{
 							
 							changes++;
 							databaseList[useIndex].tables[tableSelected].tableValues.erase(databaseList[useIndex].tables[tableSelected].tableValues.begin()+g);
 							databaseList[useIndex].tables[tableSelected].valuesInserted--;
+							g=-1;
 						}
 					}
 				}
@@ -594,15 +618,17 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 string removeFrontSpaces(string cleanString)
 {
 	int count = 0;
+	
 	for(int i=0; i<cleanString.size();i++)
 	{
-		if(cleanString.at(i) == ' ')
+		if(cleanString.at(i) == ' ' || cleanString.at(i) == '\t'/*|| cleanString.at(i) == NULL */)
 			count++;
 		else
 			break;
 
 	}
 	cleanString = cleanString.substr(count, cleanString.size()- count);
+	
 	return cleanString;
 }
 
