@@ -32,6 +32,13 @@ where name = 'Gizmo';
 
 select * from product;
 
+update bepis 
+set weight = 50 
+where height = 9;
+
+select * from bepis;
+
+
 --Delete data (20 points)
 delete from product 
 where name = 'PowerGizmo';

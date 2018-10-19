@@ -39,7 +39,9 @@ bool insert(vector <string> tokens);
 bool selectFrom(vector <string> tokens);
 bool deleteFrom(string tableName, vector <string> tokens );
 bool deleteQuery(int tableSelected, vector <string> tokens);
-bool update(string tableName, vector <string> tokens );
+bool update(string tableName, vector <string> tokens, vector <string> queries );
+bool updateQuery(int tableSelected, vector <string> tokens, vector <string> queries);
+bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string> queries);
 
 
 string removeFrontSpaces(string cleanString);
@@ -77,6 +79,7 @@ int main( int argc, char *argv[] ){
 
 
 	vector <string> commands;
+	vector <string> commandQuery;
 	string tempName;
 	vector <string> input;
 	string::size_type sz; 
@@ -169,14 +172,13 @@ int main( int argc, char *argv[] ){
 		else if (commands[0] == "UPDATE")
 		{
 
-			
-            if (commands[1] == "from")
-            {
             	i++;
-            	tempName = commands[2];
+            	tempName = commands[1];
             	commands = commandParse(input[i]);
-            	deleteFrom(tempName, commands);
-            }
+            	i++;
+            	commandQuery = commandParse(input[i]);
+            	update(tempName, commands, commandQuery);
+  
 		}
 		else if (commands[0] == "EXIT")
 		{
@@ -454,12 +456,14 @@ bool insert(vector <string> tokens)
 
 		            if(cursor == 1)
 		            {
-		            	completedArg = tokens[3].substr(cursor+7, k-7-cursor);		            	
+		            	completedArg = tokens[3].substr(cursor+7, k-7-cursor);
+		            	transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	            	
 		            	tempValue.dataMembers.push_back(completedArg);
 		            }
 		            else
 		            {
 		            	completedArg = tokens[3].substr(cursor+2, k-cursor-2);
+		            	transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
 		          	 	tempValue.dataMembers.push_back(completedArg);
 
 		            }
@@ -480,7 +484,8 @@ bool insert(vector <string> tokens)
 				{
 					completedArg = completedArg.substr(completedArg.size() - (cursor+3), cursor+1);
 				}
-			}		
+			}	
+			transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	
     		tempValue.dataMembers.push_back(completedArg);
             databaseList[useIndex].tables[i].tableValues.push_back(tempValue);
             databaseList[useIndex].tables[i].valuesInserted++;
@@ -708,4 +713,143 @@ string removeEnd(string cleanString)
 	cleanString = cleanString.substr(0, cleanString.size()-1);
 
 	return cleanString;
+}
+bool update(string tableName, vector <string> tokens, vector <string> queries )
+{
+	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
+    {
+		transform(tableName.begin(), tableName.end(), tableName.begin(), std::ptr_fun<int, int>(std::toupper));
+		transform(databaseList[useIndex].tables[i].name.begin(), databaseList[useIndex].tables[i].name.end(), databaseList[useIndex].tables[i].name.begin(), std::ptr_fun<int, int>(std::toupper));
+		//cout << tableName << endl;
+        if(tableName == databaseList[useIndex].tables[i].name)
+        {
+        	updateQuery(i, tokens, queries );
+        	return 1;
+        }
+
+    }
+    cout << "-- !Failed to update table " << tableName << " because it does not exist" << endl;
+    return 0;
+	
+}
+bool updateQuery(int tableSelected,  vector <string> queries, vector <string> tokens)
+{
+	vector<string> newString;
+	int changes= 0;
+	string::size_type sz; 
+	float tempFloat;
+	float tempFloat2;
+
+	if(tokens[0] == "WHERE")
+	{
+		
+		for(int j=0; j<databaseList[useIndex].tables[tableSelected].arguments.size();j++)
+		{
+
+			newString = splitString(databaseList[useIndex].tables[tableSelected].arguments[j]);
+			transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
+			transform(tokens[3].begin(), tokens[3].end(), tokens[3].begin(), std::ptr_fun<int, int>(std::toupper));
+			if(tokens[1] == newString[0])
+			{
+
+				//cout << "argument recognized " << endl;
+				tokens[3] = removeEnd(tokens[3]);
+				tokens[3] = removeFrontSpaces(tokens[3]);
+				
+				if(tokens[2].at(0) == '=' )
+				{
+
+					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
+					{
+						//cout << tokens[3] << "-" << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+						if(tokens[3] == databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j])
+						{
+							
+							changes++;
+							changeData(tableSelected, g, j, queries);
+							//databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] = 
+					
+						}
+					}
+				}
+				//cout << tokens[2].at(0) << endl;
+				if(tokens[2].at(0) == '>' )
+				{
+					
+					for(int g=0; g<databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
+					{
+
+						
+						databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] = removeFrontSpaces(databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j]);
+
+						//cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+						//cout << tokens[3] << endl;
+						tempFloat = stof (tokens[3] ,&sz);
+						tempFloat2 = stof (databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] ,&sz);
+						if(tempFloat < tempFloat2)
+						{
+							
+							changes++;
+							changeData(tableSelected, g, j, queries);
+						}
+
+					}
+				}
+				;
+				if(tokens[2].at(0) == '<' )
+				{
+					for(int g=0; g< databaseList[useIndex].tables[tableSelected].tableValues.size(); g++)
+					{
+
+						databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] = removeFrontSpaces(databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j]);
+						//cout << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+						tempFloat = stof (tokens[3] ,&sz);
+						tempFloat2 = stof (databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] ,&sz);
+						//cout << tempFloat << "-" << tempFloat2 << endl;
+						if(tempFloat > tempFloat2)
+						{
+							
+							changes++;
+							changeData(tableSelected, g, j, queries);
+						}
+	
+					}
+				}
+				
+				
+
+			}
+		}
+		if(changes == 1)
+			cout << "--" << changes << " record modified" << endl;
+		else
+			cout << "--" << changes << " records modified" << endl;
+
+		return 1;
+
+
+	}
+	cout << "-- !Failed to update from table " << databaseList[useIndex].tables[tableSelected].name << " because no matching query" << endl;
+    return 0;
+	return 0;
+}
+bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string> queries)
+{
+	vector<string> newString;
+	for(int j=0; j<databaseList[useIndex].tables[tableSelected].arguments.size();j++)
+	{
+
+		newString = splitString(databaseList[useIndex].tables[tableSelected].arguments[j]);
+		transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
+		if(queries[1] == newString[0])
+		{
+			//cout << queries[1] << "==" << newString[0] << endl;
+			//cout << databaseList[useIndex].tables[tableSelected].tableValues[tableEntry].dataMembers[j] << "---->" << queries[3] << endl;
+			databaseList[useIndex].tables[tableSelected].tableValues[tableEntry].dataMembers[j] = queries[3];
+		}
+	}
+
+
+
+	return 0;
 }
