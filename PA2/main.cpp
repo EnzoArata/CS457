@@ -29,7 +29,7 @@ vector<string> commandParse(string commandLine);
 bool createDatabase(string name);
 bool createTable(vector <string> tokens);
 bool argumentParse(string arguments);
-bool selectFrom(string name);
+//bool selectFrom(string name);
 bool dropDatabase(string name);
 bool dropTable(string name);
 bool use(string name);
@@ -51,9 +51,10 @@ vector <string> splitString(string splitString);
 string removeEnd(string cleanString);
 
 string setUppercase(std::string token);
-bool selectFrom(vector <string> Atributes, string Name, vector <string> tokens);
+bool selectFromQuery(vector <string> Atributes, string Name, vector <string> tokens);
 
-void printTable(int i);
+
+
 
 //Data type for values inserted into tables
 struct values{
@@ -75,6 +76,9 @@ struct dataBase{
     vector <table> tables;
     int tableIndex = -1;
 };
+
+void printTable(table currentTable);
+void printQueryTable(table currentTable, std::vector <string> Attributes);
 
 vector <dataBase> databaseList;
 
@@ -173,7 +177,7 @@ int main( int argc, char *argv[] ){
             commands = commandParse(input[inputLine]);
             if (commands[0] == "FROM"){
             	inputLine++;
-            	selectFrom(nameSelection,commands[1],commandParse(input[inputLine]));
+            	selectFromQuery(nameSelection,commands[1],commandParse(input[inputLine]));
             }
 		}
 
@@ -409,7 +413,7 @@ bool dropTable(string name)
     return 0;
 }
 //Prints out data that exists in given table
-bool selectFrom(string name)
+/*bool selectFrom(string name)
 {
     for(int j =0;j< databaseList[useIndex].tables.size();j++)
     {
@@ -433,7 +437,8 @@ bool selectFrom(string name)
     }
     cout << "-- !Failed to query table " << name << " because it does not exist" << endl;
     return 0;
-}
+}*/
+
 //adds a new data type to given table
 bool add(vector <string> tokens)
 {
@@ -467,8 +472,10 @@ bool insert(vector <string> tokens)
 	values tempValue;
     for (int i=0; i<databaseList[useIndex].tables.size(); i++)
     {
+        //Finds current table
         if(tokens[2] == databaseList[useIndex].tables[i].name)
         {
+
 		    for(k; k < tokens[3].size();k++)
 		    {
 
@@ -533,7 +540,7 @@ bool selectFrom(vector <string> tokens)
     {
         if(tempString == databaseList[useIndex].tables[i].name)
         {
-        	printTable(i);
+        	printTable(databaseList[useIndex].tables[i]);
 			return 1;
         }
     }
@@ -543,7 +550,7 @@ bool selectFrom(vector <string> tokens)
 }
 
 
-bool selectFrom(vector <string> Atributes, string Name, vector <string> tokens)
+bool selectFromQuery(vector <string> Atributes, string Name, vector <string> tokens)
 {
 	string tempString;
 
@@ -554,7 +561,7 @@ bool selectFrom(vector <string> Atributes, string Name, vector <string> tokens)
     {
         if(Name == databaseList[useIndex].tables[i].name)
         {
-        	printTable(i, Atributes);
+        	printQueryTable(databaseList[useIndex].tables[i], Atributes);
 			return 1;
         }
     }
@@ -563,23 +570,23 @@ bool selectFrom(vector <string> Atributes, string Name, vector <string> tokens)
 
 }
 
-
-void printTable(int i){
-	for(int p=0; p<databaseList[useIndex].tables[i].arguments.size(); p++)
+// prints the inputed table
+void printTable(table currentTable){
+	for(int p=0; p<currentTable.arguments.size(); p++)
 	{
-		if(p == databaseList[useIndex].tables[i].arguments.size() - 1)
-			cout << databaseList[useIndex].tables[i].arguments[p] << endl;
+		if(p == currentTable.arguments.size() - 1)
+			cout << currentTable.arguments[p] << endl;
 		else
-			cout << databaseList[useIndex].tables[i].arguments[p] << " | ";
+			cout << currentTable.arguments[p] << " | ";
 	}
-	for(int j=0; j<databaseList[useIndex].tables[i].valuesInserted;j++)
+	for(int j=0; j<currentTable.valuesInserted;j++)
 	{
 
 		
-		for(int z=0; z<databaseList[useIndex].tables[i].tableValues[j].dataMembers.size(); z++)
+		for(int z=0; z<currentTable.tableValues[j].dataMembers.size(); z++)
 		{
-				cout << databaseList[useIndex].tables[i].tableValues[j].dataMembers[z];
-				if(z!=databaseList[useIndex].tables[i].tableValues[j].dataMembers.size()-1)	
+				cout << currentTable.tableValues[j].dataMembers[z];
+				if(z!=currentTable.tableValues[j].dataMembers.size()-1)	
 				{
 					cout << " | ";
 				}
@@ -589,22 +596,111 @@ void printTable(int i){
 }
 
 //Unimplemented just prints table
-void printTable(int i, std::vector<string> Atributes){
-	for(int p=0; p<databaseList[useIndex].tables[i].arguments.size(); p++)
+void printQueryTable(table currentTable, std::vector<string> Atributes){
+	std::vector <string> argumentAndValue;
+	for(int i=0; i< currentTable.arguments.size(); i++)
 	{
-		if(p == databaseList[useIndex].tables[i].arguments.size() - 1)
-			cout << databaseList[useIndex].tables[i].arguments[p] << endl;
-		else
-			cout << databaseList[useIndex].tables[i].arguments[p] << " | ";
+		argumentAndValue = splitString(currentTable.arguments[i]);
+		for (int j=0; j< Atributes.size(); j++){
+
+			// Only printing one attribute right now ???
+			if (argumentAndValue[0] == Atributes[j]){
+				if(j == Atributes.size() - 1)
+					cout << Atributes[j];
+				else
+					cout << Atributes[j] << " | ";
+			}
+		}
+		
 	}
-	for(int j=0; j<databaseList[useIndex].tables[i].valuesInserted;j++)
+	cout << endl;
+	/*for(int j=0; j<currentTable.arguments.size();j++)
+	{
+
+		newString = splitString(currentTable.arguments[j]);
+		//newString[0] = setUppercase(newString[0]);
+		//transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
+		//tokens[3] = setUppercase(tokens[3]);
+		//transform(tokens[3].begin(), tokens[3].end(), tokens[3].begin(), std::ptr_fun<int, int>(std::toupper));
+		if(tokens[1] == newString[0])
+		{
+
+			//cout << "argument recognized " << endl;
+			tokens[3] = removeEnd(tokens[3]);
+			tokens[3] = removeFrontSpaces(tokens[3]);
+			
+			if(tokens[2].at(0) == '=' )
+			{
+
+				for(int g=0; g<currentTable.tableValues.size(); g++)
+				{
+					//cout << tokens[3] << "-" << currentTable.tableValues[g].dataMembers[j] << endl;
+					if(tokens[3] == currentTable.tableValues[g].dataMembers[j])
+					{
+						
+						changes++;
+						changeData(tableSelected, g, j, queries);
+						//currentTable.tableValues[g].dataMembers[j] = 
+				
+					}
+				}
+			}
+			//cout << tokens[2].at(0) << endl;
+			if(tokens[2].at(0) == '>' )
+			{
+				
+				for(int g=0; g<currentTable.tableValues.size(); g++)
+				{
+
+					
+					currentTable.tableValues[g].dataMembers[j] = removeFrontSpaces(currentTable.tableValues[g].dataMembers[j]);
+
+					//cout << currentTable.tableValues[g].dataMembers[j] << endl;
+					//cout << tokens[3] << endl;
+					tempFloat = stof (tokens[3] ,&sz);
+					tempFloat2 = stof (currentTable.tableValues[g].dataMembers[j] ,&sz);
+					if(tempFloat < tempFloat2)
+					{
+						
+						changes++;
+						changeData(tableSelected, g, j, queries);
+					}
+
+				}
+			}
+			;
+			if(tokens[2].at(0) == '<' )
+			{
+				for(int g=0; g< currentTable.tableValues.size(); g++)
+				{
+
+					currentTable.tableValues[g].dataMembers[j] = removeFrontSpaces(currentTable.tableValues[g].dataMembers[j]);
+					//cout << currentTable.tableValues[g].dataMembers[j] << endl;
+					tempFloat = stof (tokens[3] ,&sz);
+					tempFloat2 = stof (currentTable.tableValues[g].dataMembers[j] ,&sz);
+					//cout << tempFloat << "-" << tempFloat2 << endl;
+					if(tempFloat > tempFloat2)
+					{
+						
+						changes++;
+						changeData(tableSelected, g, j, queries);
+					}
+
+				}
+			}
+			
+			
+
+		}
+	}*/
+	for(int i=0; i<currentTable.valuesInserted;i++)
 	{
 
 		
-		for(int z=0; z<databaseList[useIndex].tables[i].tableValues[j].dataMembers.size(); z++)
+		for(int j=0; j<currentTable.tableValues[i].dataMembers.size(); j++)
 		{
-				cout << databaseList[useIndex].tables[i].tableValues[j].dataMembers[z];
-				if(z!=databaseList[useIndex].tables[i].tableValues[j].dataMembers.size()-1)	
+				cout << currentTable.tableValues[i].dataMembers[j];
+				if(j!=currentTable.tableValues[i].dataMembers.size()-1)	
 				{
 					cout << " | ";
 				}

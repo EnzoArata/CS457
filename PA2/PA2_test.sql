@@ -65,7 +65,7 @@ select * from product;
 select * from bepis;
 
 --Query subsets (10 points)
-select name, price 
+select pid, name 
 from product 
 where pid != 3;
 
