@@ -15,7 +15,7 @@ insert into Product values(4,	'MultiTouch', 	199.99);
 insert into Product values(5,	'SuperGizmo', 	49.99);
 insert into bepis values(1,	2, 3, 	49.99);
 insert into bepis values(2,	12, 9,       20);
-insert into bepis values(2,	20, 11,       24);
+insert into bepis values(3,	20, 11,       24);
 
 select * from Product;
 
@@ -36,6 +36,10 @@ update bepis
 set weight = 50 
 where height = 9;
 
+update bepis 
+set height = 3 
+where price > 20;
+
 select * from bepis;
 
 
@@ -43,17 +47,17 @@ select * from bepis;
 delete from product 
 where name = 'PowerGizmo';
 
-delete from product 
-where name = 'Gizmo';
+--delete from product 
+--where name = 'Gizmo';
 
-delete from product 
-where price > 175.99;
+--delete from product 
+--where price > 175.99;
 
 delete from bepis
 where weight = 12;
 
 delete from bepis
-where height = 3;
+where height > 3;
 
 
 select * from product;
@@ -63,7 +67,7 @@ select * from bepis;
 --Query subsets (10 points)
 select name, price 
 from product 
-where pid != 2;
+where pid != 3;
 
 -- Expected output
 --

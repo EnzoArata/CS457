@@ -44,10 +44,16 @@ bool updateQuery(int tableSelected, vector <string> tokens, vector <string> quer
 bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string> queries);
 
 
+
+
 string removeFrontSpaces(string cleanString);
 vector <string> splitString(string splitString);
 string removeEnd(string cleanString);
 
+string setUppercase(std::string token);
+bool selectFrom(vector <string> Atributes, string Name, vector <string> tokens);
+
+void printTable(int i);
 
 //Data type for values inserted into tables
 struct values{
@@ -57,7 +63,7 @@ struct values{
 //Data type for our tables
 struct table{
     string name;
-    int args=0;
+    //int args=0;
     vector <string> arguments;
     vector <values> tableValues;
     int valuesInserted = 0;
@@ -80,7 +86,7 @@ int main( int argc, char *argv[] ){
 
 	vector <string> commands;
 	vector <string> commandQuery;
-	string tempName;
+	vector <string> nameSelection;
 	vector <string> input;
 	string::size_type sz; 
     ifstream inFile;
@@ -93,127 +99,149 @@ int main( int argc, char *argv[] ){
        // cout << currentLine << endl;
         if (currentLine.substr(0,2)=="--")
             continue;
-        input.push_back(currentLine);
+        input.push_back(setUppercase(currentLine));
 	}
 
 
 
     //loop that runs on number of strings collected from file
-	for(int i = 0; i< input.size();i++){
+	for(int inputLine = 0; inputLine < input.size(); inputLine++)
+	{
 
-        //Calls on parsing function
-		commands = commandParse(input[i]);
+        //Calls on parsing function for current input line
+		commands = commandParse(input[inputLine]);
+		nameSelection.clear();
 
 
         //Checks tokens of string to decipher command
-		if (commands[0] == "CREATE"){
-			if (commands[1] == "DATABASE"){
+		if (commands[0] == "CREATE")
+		{
+			if (commands[1] == "DATABASE")
 				createDatabase(commands[2]);
-			}
-			if (commands[1] == "TABLE"){
+
+			if (commands[1] == "TABLE")
                 createTable(commands);
-			}
-		}
+		} 
+
+
 		else if (commands[0] == "DROP")
 		{
-			if (commands[1] == "DATABASE"){
+			if (commands[1] == "DATABASE")
                 dropDatabase(commands[2]);
-			}
-			if (commands[1] == "TABLE"){
-                dropTable(commands[2]);
-			}
 
-		}
-		else if (commands[0] == "USE")
+			if (commands[1] == "TABLE")
+                dropTable(commands[2]);
+		} 
+
+
+		else if (commands[0] == "USE") 
 		{
 			use(commands[1]);
-		}
-		/*else if (commands[0] == "SELECT")
-		{
-            selectFrom(commands[3]);
-		}*/
+		} 
+
+
 		else if (commands[0] == "ALTER")
 		{
             add(commands);
 		}
+
+
 		else if (commands[0] == "INSERT")
 		{
-			
-            if (commands[1] == "INTO")
-            {
-            	insert(commands);
-            }
+			 if (commands[1] == "INTO"){
+			 	insert(commands);
+			 }	
+			 	 
 		}
+		
+
 		else if (commands[0] == "SELECT")
 		{
-
-			
-            if (commands[1] == "*")
-            {
-            	if (commands[2] == "FROM")
-           		{
-
+			if (commands[1] == "*"){
+            	if (commands[2] == "FROM"){
             		selectFrom(commands);
-           		}
+            		continue;
+            	}
+
+           		
+            }
+            for (int names = 1; names<commands.size();names++){
+            	nameSelection.push_back(commands[names]);
+            }
+            nameSelection.push_back(commands[2]);
+            inputLine++;
+            commands = commandParse(input[inputLine]);
+            if (commands[0] == "FROM"){
+            	inputLine++;
+            	selectFrom(nameSelection,commands[1],commandParse(input[inputLine]));
             }
 		}
+
+
 		else if (commands[0] == "DELETE")
 		{
-
-			
-            if (commands[1] == "FROM")
+			if (commands[1] == "FROM")
             {
-            	i++;
-            	tempName = commands[2];
-            	commands = commandParse(input[i]);
-            	deleteFrom(tempName, commands);
+            	inputLine++;
+            	nameSelection.push_back(commands[2]);
+            	commands = commandParse(input[inputLine]);
+            	deleteFrom(nameSelection[0], commands);
             }
 		}
+
+
 		else if (commands[0] == "UPDATE")
 		{
-
-            	i++;
-            	tempName = commands[1];
-            	commands = commandParse(input[i]);
-            	i++;
-            	commandQuery = commandParse(input[i]);
-            	update(tempName, commands, commandQuery);
+            	inputLine++;
+            	nameSelection.push_back(commands[1]);
+            	commands = commandParse(input[inputLine]);
+            	inputLine++;
+            	commandQuery = commandParse(input[inputLine]);
+            	update(nameSelection[0], commands, commandQuery);
   
 		}
+
+
 		else if (commands[0] == "EXIT")
 		{
             clearData();
             cout << "-- Exiting program" << endl;
 			return 0;
 		}
+
+
+		else if (commands[0] == "" |commands[0] == " " | commands[0] == "/n"){
+			continue;
+		}
+
 		else {
-			//cout << "-- Command not recognized" << endl;
+			cout << "-- Command not recognized" << endl;
 		}
 	}
 	/*string s = "149.99";
 	float tempFloat;
-	transform(s.begin(), s.end(), s.begin(), std::ptr_fun<int, int>(std::toupper));
+	//setUppercase()
+	//transform(s.begin(), s.end(), s.begin(), std::ptr_fun<int, int>(std::toupper));
 	tempFloat = stof (s ,&sz);
 	cout << s << endl;
 	cout << tempFloat << endl;*/
 	
 
 }
-//Parses string by making new strings where there are spaces
+//changes the command line string into a vector of the separated tokens
 vector<string> commandParse(string commandLine){
 	vector <string> commands;
-	string chopped;
+	string token = "";
 	int i;
 	int cursor = 0;
 	
- 	string s="";
  	
 
 	for(i=0; i<commandLine.size(); i++){
 		if (commandLine.at(i)==' '){
-			s = commandLine.substr(cursor,i-cursor);
-			transform(s.begin(), s.end(), s.begin(), std::ptr_fun<int, int>(std::toupper));
-			commands.push_back(s);
+			token = commandLine.substr(cursor,i-cursor);
+			//token = setUppercase(token);
+			commands.push_back(token);
 			cursor=i+1;
 
 		}
@@ -228,9 +256,9 @@ vector<string> commandParse(string commandLine){
 		}
 
 	}
-	chopped = commandLine.substr(cursor);
-	chopped = chopped.substr(0, chopped.size()-1);
-	commands.push_back(chopped);
+	token = commandLine.substr(cursor);
+	token = token.substr(0, token.size()-1);
+	commands.push_back(token);
 
 
 	return commands;
@@ -297,6 +325,7 @@ bool clearData()
         rmdir(directoryName.c_str());
         directoryName = "DataBases/";
     }
+    return 1;
 }
 //Makes a new table if one with same name doesnt exist
 bool createTable(vector <string> tokens)
@@ -314,10 +343,11 @@ bool createTable(vector <string> tokens)
 			return 0;
         }
     }
-    table tempTable = {tokens[2], 0, t_string  };
+    table tempTable = {tokens[2], t_string};
 	databaseList[useIndex].tables.push_back(tempTable);
     databaseList[useIndex].tableIndex = databaseList[useIndex].tables.size()-1;
     argumentParse(tokens[3]);
+    return 1;
 }
 //Parses string into arguments for tables
 bool argumentParse(string t_arg)
@@ -327,7 +357,7 @@ bool argumentParse(string t_arg)
     string completedArg;
     string chopped;
 	int cursor = 1;
-   // cout << t_arg << endl;
+
     for(i; i < t_arg.size();i++)
     {
 
@@ -337,8 +367,7 @@ bool argumentParse(string t_arg)
             completedArg = t_arg.substr(cursor+1, i-cursor-1);
             //cout << useIndex << " " << tableIndex << endl;
             completedArg = removeFrontSpaces(completedArg);
-			transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
-            databaseList[useIndex].tables[databaseList[useIndex].tableIndex].args++;
+			//databaseList[useIndex].tables[databaseList[useIndex].tableIndex].args++;
             databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.push_back(completedArg);
             completedArg = "";
             cursor=i++;
@@ -356,20 +385,12 @@ bool argumentParse(string t_arg)
 	else{
         chopped = t_arg.substr(cursor+2);
         chopped = chopped.substr(0, chopped.size()-2);
-        //completedArg = t_arg.substr(cursor+2);
-
-
 	}
-    databaseList[useIndex].tables[databaseList[useIndex].tableIndex].args++;
     databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.push_back(chopped);
 
     cout << "-- Table " << databaseList[useIndex].tables[databaseList[useIndex].tableIndex].name << " created." << endl;
 
-   /* for(int j = 0; j< databaseList[useIndex].tables[tableIndex].args;j++)
-    {
-        cout << databaseList[useIndex].tables[tableIndex].arguments[j] << " ";
-    }
-    cout << endl;*/
+    return 1;
 
 }
 //deletes table if it exists
@@ -393,7 +414,7 @@ bool selectFrom(string name)
     for(int j =0;j< databaseList[useIndex].tables.size();j++)
     {
     	name = removeEnd(name);
-    	transform(name.begin(), name.end(), name.begin(), std::ptr_fun<int, int>(std::toupper));
+
     	cout << name << " != " << databaseList[useIndex].tables[j].name << endl;
 
         if(name == databaseList[useIndex].tables[j].name)
@@ -421,7 +442,7 @@ bool add(vector <string> tokens)
         if(tokens[2] == databaseList[useIndex].tables[i].name)
         {
             joinedString = tokens[4] + tokens[5];
-            databaseList[useIndex].tables[i].args++;
+            //databaseList[useIndex].tables[i].args++;
             databaseList[useIndex].tables[i].arguments.push_back(joinedString);
              cout << "-- Table " << tokens[2] << " modified." << endl;
             return 1;
@@ -457,13 +478,15 @@ bool insert(vector <string> tokens)
 		            if(cursor == 1)
 		            {
 		            	completedArg = tokens[3].substr(cursor+7, k-7-cursor);
-		            	transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	            	
+		            	//setUppercase()
+		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	            	
 		            	tempValue.dataMembers.push_back(completedArg);
 		            }
 		            else
 		            {
 		            	completedArg = tokens[3].substr(cursor+2, k-cursor-2);
-		            	transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
+		            	//setUppercase()
+		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
 		          	 	tempValue.dataMembers.push_back(completedArg);
 
 		            }
@@ -485,7 +508,8 @@ bool insert(vector <string> tokens)
 					completedArg = completedArg.substr(completedArg.size() - (cursor+3), cursor+1);
 				}
 			}	
-			transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	
+			//setUppercase()
+			//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	
     		tempValue.dataMembers.push_back(completedArg);
             databaseList[useIndex].tables[i].tableValues.push_back(tempValue);
             databaseList[useIndex].tables[i].valuesInserted++;
@@ -503,32 +527,13 @@ bool selectFrom(vector <string> tokens)
 	string tempString;
 	tempString = tokens[3].substr(0,tokens[3].size() -1);
 	tempString = removeEnd(tempString);
-	transform(tempString.begin(), tempString.end(), tempString.begin(), std::ptr_fun<int, int>(std::toupper));
+	//setUppercase()
+	//transform(tempString.begin(), tempString.end(), tempString.begin(), std::ptr_fun<int, int>(std::toupper));
 	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
     {
         if(tempString == databaseList[useIndex].tables[i].name)
         {
-        	for(int p=0; p<databaseList[useIndex].tables[i].arguments.size(); p++)
-        	{
-        		if(p == databaseList[useIndex].tables[i].arguments.size() - 1)
-        			cout << databaseList[useIndex].tables[i].arguments[p] << endl;
-        		else
-        			cout << databaseList[useIndex].tables[i].arguments[p] << " | ";
-        	}
-	        for(int j=0; j<databaseList[useIndex].tables[i].valuesInserted;j++)
-			{
-
-				
-				for(int z=0; z<databaseList[useIndex].tables[i].tableValues[j].dataMembers.size(); z++)
-				{
-						cout << databaseList[useIndex].tables[i].tableValues[j].dataMembers[z];
-						if(z!=databaseList[useIndex].tables[i].tableValues[j].dataMembers.size()-1)	
-						{
-							cout << " | ";
-						}
-				}
-				cout << endl;
-			}
+        	printTable(i);
 			return 1;
         }
     }
@@ -536,13 +541,86 @@ bool selectFrom(vector <string> tokens)
     return 0;
 
 }
+
+
+bool selectFrom(vector <string> Atributes, string Name, vector <string> tokens)
+{
+	string tempString;
+
+	//tempString = removeEnd(tempString);
+	//setUppercase()
+	//transform(tempString.begin(), tempString.end(), tempString.begin(), std::ptr_fun<int, int>(std::toupper));
+	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
+    {
+        if(Name == databaseList[useIndex].tables[i].name)
+        {
+        	printTable(i, Atributes);
+			return 1;
+        }
+    }
+    cout << "-- !Failed to print table " << tokens[3] << " because it does not exist" << endl;
+    return 0;
+
+}
+
+
+void printTable(int i){
+	for(int p=0; p<databaseList[useIndex].tables[i].arguments.size(); p++)
+	{
+		if(p == databaseList[useIndex].tables[i].arguments.size() - 1)
+			cout << databaseList[useIndex].tables[i].arguments[p] << endl;
+		else
+			cout << databaseList[useIndex].tables[i].arguments[p] << " | ";
+	}
+	for(int j=0; j<databaseList[useIndex].tables[i].valuesInserted;j++)
+	{
+
+		
+		for(int z=0; z<databaseList[useIndex].tables[i].tableValues[j].dataMembers.size(); z++)
+		{
+				cout << databaseList[useIndex].tables[i].tableValues[j].dataMembers[z];
+				if(z!=databaseList[useIndex].tables[i].tableValues[j].dataMembers.size()-1)	
+				{
+					cout << " | ";
+				}
+		}
+		cout << endl;
+	}
+}
+
+//Unimplemented just prints table
+void printTable(int i, std::vector<string> Atributes){
+	for(int p=0; p<databaseList[useIndex].tables[i].arguments.size(); p++)
+	{
+		if(p == databaseList[useIndex].tables[i].arguments.size() - 1)
+			cout << databaseList[useIndex].tables[i].arguments[p] << endl;
+		else
+			cout << databaseList[useIndex].tables[i].arguments[p] << " | ";
+	}
+	for(int j=0; j<databaseList[useIndex].tables[i].valuesInserted;j++)
+	{
+
+		
+		for(int z=0; z<databaseList[useIndex].tables[i].tableValues[j].dataMembers.size(); z++)
+		{
+				cout << databaseList[useIndex].tables[i].tableValues[j].dataMembers[z];
+				if(z!=databaseList[useIndex].tables[i].tableValues[j].dataMembers.size()-1)	
+				{
+					cout << " | ";
+				}
+		}
+		cout << endl;
+	}
+}
+
+
 //Deletes entries in table
 bool deleteFrom(string tableName, vector <string> tokens )
 {
 	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
     {
-		transform(tableName.begin(), tableName.end(), tableName.begin(), std::ptr_fun<int, int>(std::toupper));
-        if(tableName == databaseList[useIndex].tables[i].name)
+		
+		if(tableName == databaseList[useIndex].tables[i].name)
         {
         	deleteQuery(i, tokens );
         	return 1;
@@ -572,9 +650,9 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 
 			newString = splitString(databaseList[useIndex].tables[tableSelected].arguments[j]);
 			
-			//cout << "beep" << endl;
-			//cout << tokens[1] << "-" << newString[0] << endl;
-			transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
+
+			////setUppercase()
+			//transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
 			if(tokens[1] == newString[0])
 			{
 				//cout << "argument recognized " << endl;
@@ -718,8 +796,10 @@ bool update(string tableName, vector <string> tokens, vector <string> queries )
 {
 	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
     {
-		transform(tableName.begin(), tableName.end(), tableName.begin(), std::ptr_fun<int, int>(std::toupper));
-		transform(databaseList[useIndex].tables[i].name.begin(), databaseList[useIndex].tables[i].name.end(), databaseList[useIndex].tables[i].name.begin(), std::ptr_fun<int, int>(std::toupper));
+		tableName = setUppercase(tableName);
+		//transform(tableName.begin(), tableName.end(), tableName.begin(), std::ptr_fun<int, int>(std::toupper));
+		//databaseList[useIndex].tables[i].name = setUppercase(databaseList[useIndex].tables[i].name);
+		//transform(databaseList[useIndex].tables[i].name.begin(), databaseList[useIndex].tables[i].name.end(), databaseList[useIndex].tables[i].name.begin(), std::ptr_fun<int, int>(std::toupper));
 		//cout << tableName << endl;
         if(tableName == databaseList[useIndex].tables[i].name)
         {
@@ -747,8 +827,10 @@ bool updateQuery(int tableSelected,  vector <string> queries, vector <string> to
 		{
 
 			newString = splitString(databaseList[useIndex].tables[tableSelected].arguments[j]);
-			transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
-			transform(tokens[3].begin(), tokens[3].end(), tokens[3].begin(), std::ptr_fun<int, int>(std::toupper));
+			newString[0] = setUppercase(newString[0]);
+			//transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
+			tokens[3] = setUppercase(tokens[3]);
+			//transform(tokens[3].begin(), tokens[3].end(), tokens[3].begin(), std::ptr_fun<int, int>(std::toupper));
 			if(tokens[1] == newString[0])
 			{
 
@@ -840,7 +922,8 @@ bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string
 	{
 
 		newString = splitString(databaseList[useIndex].tables[tableSelected].arguments[j]);
-		transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
+		//newString[0] = setUppercase(newString[0]);
+		//transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
 		if(queries[1] == newString[0])
 		{
 			//cout << queries[1] << "==" << newString[0] << endl;
@@ -852,4 +935,10 @@ bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string
 
 
 	return 0;
+}
+
+string setUppercase(std::string token){
+	
+	transform(token.begin(), token.end(), token.begin(), std::ptr_fun<int, int>(std::toupper));
+	return token;
 }
