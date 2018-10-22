@@ -2,8 +2,8 @@
     Enzo Arata
     Zachary Mcilwain
     CS 457
-    Project 1
-    September 27th
+    Project 2
+    October 21st
 */
 #include <string>
 //#include <stdlib.h>
@@ -78,7 +78,8 @@ struct dataBase{
 };
 
 void printTable(table currentTable);
-void printQueryTable(table currentTable, std::vector <string> Attributes);
+void printCutTable(table currentTable, vector <string> Atributes);
+void printQueryTable(values currentEntry, std::vector <string> Attributes, int tableSelected);
 
 vector <dataBase> databaseList;
 
@@ -549,19 +550,114 @@ bool selectFrom(vector <string> tokens)
 
 }
 
-
+//Prints the variable names of the table 
+//Then it finds what table entries are valid to print and calls on the printquery function
 bool selectFromQuery(vector <string> Atributes, string Name, vector <string> tokens)
 {
 	string tempString;
+	vector<string> cutString;
+	//Atributes.erase(Atributes.begin() + (Atributes.size()-1) );
+	Atributes[0] = removeEnd(Atributes[0]);
+	int tracker = 0;
 
-	//tempString = removeEnd(tempString);
-	//setUppercase()
-	//transform(tempString.begin(), tempString.end(), tempString.begin(), std::ptr_fun<int, int>(std::toupper));
-	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
+	Atributes.pop_back();
+	Atributes.pop_back();
+	
+	//Atributes.pop_back();
+	//cout << Atributes[0] << " "<< Atributes[1] << endl;
+	//cout << tokens[0] << " "<< tokens[1] << endl;
+	tokens[3] = removeEnd(tokens[3]);
+	for (int tableSelected=0; tableSelected<databaseList[useIndex].tables.size(); tableSelected++)
     {
-        if(Name == databaseList[useIndex].tables[i].name)
+    	//IF table exists then we start by printing the variable names and type
+        if(Name == databaseList[useIndex].tables[tableSelected].name)
         {
-        	printQueryTable(databaseList[useIndex].tables[i], Atributes);
+        	for(int currentArg=0; currentArg<databaseList[useIndex].tables[tableSelected].arguments.size(); currentArg++)
+			{
+				for(int constraints=0;constraints<Atributes.size();constraints++)
+				{
+					cutString = splitString(databaseList[useIndex].tables[tableSelected].arguments[currentArg]);
+					cutString[0] = setUppercase(cutString[0]);
+
+					//cout << cutString[0] << "-" << Atributes[constraints] << endl;	
+					if(cutString[0] == Atributes[constraints])
+					{
+						
+						if(tracker>0)
+							cout << " | ";	
+
+						tracker=1;
+						cout <<	databaseList[useIndex].tables[tableSelected].arguments[currentArg] ;
+						
+								
+					}
+				}
+				
+			}
+			cout << endl;
+			//After printing the table variable we begin the querying process
+        	for(int argumentSelected=0; argumentSelected<databaseList[useIndex].tables[tableSelected].arguments.size();argumentSelected++)
+			{
+
+				cutString = splitString(databaseList[useIndex].tables[tableSelected].arguments[argumentSelected]);
+				cutString[0] = setUppercase(cutString[0]);
+				tokens[3] = setUppercase(tokens[3]);
+
+				if(tokens[1] == cutString[0])
+				{
+
+					if(tokens[2].at(0) == '=' )
+					{
+
+						for(int tableEntry=0; tableEntry<databaseList[useIndex].tables[tableSelected].tableValues.size(); tableEntry++)
+						{
+							//cout << tokens[3] << "-" << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+							if(tokens[3] == databaseList[useIndex].tables[tableSelected].tableValues[tableEntry].dataMembers[argumentSelected])
+							{	
+								printQueryTable(databaseList[useIndex].tables[tableSelected].tableValues[tableEntry], Atributes, tableSelected);
+							}
+						}
+					}
+					if(tokens[2].at(0) == '<' )
+					{
+
+						for(int tableEntry=0; tableEntry<databaseList[useIndex].tables[tableSelected].tableValues.size(); tableEntry++)
+						{
+							//cout << tokens[3] << "-" << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+							if(tokens[3] > databaseList[useIndex].tables[tableSelected].tableValues[tableEntry].dataMembers[argumentSelected])
+							{	
+								printQueryTable(databaseList[useIndex].tables[tableSelected].tableValues[tableEntry], Atributes, tableSelected);
+							}
+						}
+					}
+					if(tokens[2].at(0) == '>' )
+					{
+
+						for(int tableEntry=0; tableEntry<databaseList[useIndex].tables[tableSelected].tableValues.size(); tableEntry++)
+						{
+							//cout << tokens[3] << "-" << databaseList[useIndex].tables[tableSelected].tableValues[g].dataMembers[j] << endl;
+							if(tokens[3] < databaseList[useIndex].tables[tableSelected].tableValues[tableEntry].dataMembers[argumentSelected])
+							{	
+								printQueryTable(databaseList[useIndex].tables[tableSelected].tableValues[tableEntry], Atributes, tableSelected);
+							}
+						}
+					}
+					if(tokens[2].at(0) == '!' )
+					{
+
+						for(int tableEntry=0; tableEntry<databaseList[useIndex].tables[tableSelected].tableValues.size(); tableEntry++)
+						{
+							//cout << tokens[3] << "-" << databaseList[useIndex].tables[tableSelected].tableValues[tableEntry].dataMembers[argumentSelected] << endl;
+							if(tokens[3] != databaseList[useIndex].tables[tableSelected].tableValues[tableEntry].dataMembers[argumentSelected])
+							{	
+								printQueryTable(databaseList[useIndex].tables[tableSelected].tableValues[tableEntry], Atributes, tableSelected);
+							}
+						}
+					}
+
+				}
+
+			}
 			return 1;
         }
     }
@@ -570,6 +666,41 @@ bool selectFromQuery(vector <string> Atributes, string Name, vector <string> tok
 
 }
 
+//Functions to prints entries in tables
+//Only prints arguments that matcht the query that is recieved
+void printQueryTable(values currentEntry, std::vector <string> Atributes, int tableSelected)
+{
+	vector <string> cutString;
+	
+	int tracker=0;
+	//Atributes.erase(Atributes.begin() + (Atributes.size()-3) );
+	for(int currentArg=0; currentArg<currentEntry.dataMembers.size(); currentArg++)
+	{
+		for(int constraints=0;constraints<Atributes.size();constraints++)
+		{
+			cutString = splitString(databaseList[useIndex].tables[tableSelected].arguments[currentArg]);
+			cutString[0] = setUppercase(cutString[0]);
+
+			//cout << cutString[0] << " " << Atributes[constraints] << endl;
+			if(cutString[0] == Atributes[constraints])
+			{
+				if(tracker>0)
+					cout << " | ";	
+
+				cout << currentEntry.dataMembers[currentArg] ;
+				tracker=1;
+				
+			}
+		}
+		
+	}
+	if(tracker>0)
+	{
+		cout << endl;
+	}
+	
+
+}
 // prints the inputed table
 void printTable(table currentTable){
 	for(int p=0; p<currentTable.arguments.size(); p++)
@@ -596,7 +727,7 @@ void printTable(table currentTable){
 }
 
 //Unimplemented just prints table
-void printQueryTable(table currentTable, std::vector<string> Atributes){
+/*void printQueryTable(table currentTable, std::vector<string> Atributes){
 	std::vector <string> argumentAndValue;
 	for(int i=0; i< currentTable.arguments.size(); i++)
 	{
@@ -614,85 +745,7 @@ void printQueryTable(table currentTable, std::vector<string> Atributes){
 		
 	}
 	cout << endl;
-	/*for(int j=0; j<currentTable.arguments.size();j++)
-	{
 
-		newString = splitString(currentTable.arguments[j]);
-		//newString[0] = setUppercase(newString[0]);
-		//transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
-		//tokens[3] = setUppercase(tokens[3]);
-		//transform(tokens[3].begin(), tokens[3].end(), tokens[3].begin(), std::ptr_fun<int, int>(std::toupper));
-		if(tokens[1] == newString[0])
-		{
-
-			//cout << "argument recognized " << endl;
-			tokens[3] = removeEnd(tokens[3]);
-			tokens[3] = removeFrontSpaces(tokens[3]);
-			
-			if(tokens[2].at(0) == '=' )
-			{
-
-				for(int g=0; g<currentTable.tableValues.size(); g++)
-				{
-					//cout << tokens[3] << "-" << currentTable.tableValues[g].dataMembers[j] << endl;
-					if(tokens[3] == currentTable.tableValues[g].dataMembers[j])
-					{
-						
-						changes++;
-						changeData(tableSelected, g, j, queries);
-						//currentTable.tableValues[g].dataMembers[j] = 
-				
-					}
-				}
-			}
-			//cout << tokens[2].at(0) << endl;
-			if(tokens[2].at(0) == '>' )
-			{
-				
-				for(int g=0; g<currentTable.tableValues.size(); g++)
-				{
-
-					
-					currentTable.tableValues[g].dataMembers[j] = removeFrontSpaces(currentTable.tableValues[g].dataMembers[j]);
-
-					//cout << currentTable.tableValues[g].dataMembers[j] << endl;
-					//cout << tokens[3] << endl;
-					tempFloat = stof (tokens[3] ,&sz);
-					tempFloat2 = stof (currentTable.tableValues[g].dataMembers[j] ,&sz);
-					if(tempFloat < tempFloat2)
-					{
-						
-						changes++;
-						changeData(tableSelected, g, j, queries);
-					}
-
-				}
-			}
-			;
-			if(tokens[2].at(0) == '<' )
-			{
-				for(int g=0; g< currentTable.tableValues.size(); g++)
-				{
-
-					currentTable.tableValues[g].dataMembers[j] = removeFrontSpaces(currentTable.tableValues[g].dataMembers[j]);
-					//cout << currentTable.tableValues[g].dataMembers[j] << endl;
-					tempFloat = stof (tokens[3] ,&sz);
-					tempFloat2 = stof (currentTable.tableValues[g].dataMembers[j] ,&sz);
-					//cout << tempFloat << "-" << tempFloat2 << endl;
-					if(tempFloat > tempFloat2)
-					{
-						
-						changes++;
-						changeData(tableSelected, g, j, queries);
-					}
-
-				}
-			}
-			
-			
-
-		}
-	}*/
 	for(int i=0; i<currentTable.valuesInserted;i++)
 	{
 
@@ -707,10 +760,10 @@ void printQueryTable(table currentTable, std::vector<string> Atributes){
 		}
 		cout << endl;
 	}
-}
+}*/
 
 
-//Deletes entries in table
+//Checks if table exists and then calls on deleteQuery
 bool deleteFrom(string tableName, vector <string> tokens )
 {
 	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
@@ -844,6 +897,7 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 	cout << "-- !Failed to delete from table " << databaseList[useIndex].tables[tableSelected].name << " because no matching query" << endl;
     return 0;
 }
+//Removes spaces from beginning of strings
 string removeFrontSpaces(string cleanString)
 {
 	int count = 0;
@@ -860,7 +914,7 @@ string removeFrontSpaces(string cleanString)
 	
 	return cleanString;
 }
-
+//Returns a vector of strings by splitting up the input string where spaces are
 vector <string> splitString(string inputString)
 {
 	vector <string> newString;
@@ -881,13 +935,15 @@ vector <string> splitString(string inputString)
 	newString.push_back(chop);
 	return newString;
 }
+//Checks if the last character is a ';' or ',' and if it is removes it
 string removeEnd(string cleanString)
 {
-	if(cleanString.at(cleanString.size()-1) == ';')
+	if(cleanString.at(cleanString.size()-1) == ';' || cleanString.at(cleanString.size()-1) == ',')
 	cleanString = cleanString.substr(0, cleanString.size()-1);
 
 	return cleanString;
 }
+//CHecks if table exist and if it does calls on update query
 bool update(string tableName, vector <string> tokens, vector <string> queries )
 {
 	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
@@ -908,6 +964,7 @@ bool update(string tableName, vector <string> tokens, vector <string> queries )
     return 0;
 	
 }
+//USes query to find where data needs to be changed and calls change Data
 bool updateQuery(int tableSelected,  vector <string> queries, vector <string> tokens)
 {
 	vector<string> newString;
@@ -1011,6 +1068,7 @@ bool updateQuery(int tableSelected,  vector <string> queries, vector <string> to
     return 0;
 	return 0;
 }
+//Updates data in  a tuple based of query selection from updatequery
 bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string> queries)
 {
 	vector<string> newString;
@@ -1032,7 +1090,7 @@ bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string
 
 	return 0;
 }
-
+//Sets string to all uppercase when it is applicable
 string setUppercase(std::string token){
 	
 	transform(token.begin(), token.end(), token.begin(), std::ptr_fun<int, int>(std::toupper));
