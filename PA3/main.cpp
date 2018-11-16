@@ -261,7 +261,8 @@ vector<string> commandParse(string commandLine){
 			{
 				token = commandLine.substr(cursor,i-cursor);
 				commands.push_back(token);
-				//cursor = i-2;
+				//cout << token << endl;
+				cursor = i;
 				break;
 
 			}
@@ -488,38 +489,45 @@ bool insert(vector <string> tokens)
         //Finds current table
         if(tokens[2] == databaseList[useIndex].tables[i].name)
         {
-
+        	tokens[4].erase(std::remove(tokens[4].begin(), tokens[4].end(), '\t'), tokens[4].end());
 		    for(k; k < tokens[4].size();k++)
 		    {
 
-
+		        if(tokens[4].at(k) == '\t' )
+		        {
+		        	cursor++;
+		        }
 		        if(tokens[4].at(k) == ',' )
 		        {
 
 		            if(cursor == 1)
 		            {
+		            	//cout << tokens[4] << endl;
 
-		            	completedArg = tokens[4].substr(cursor+6, k-6-cursor);
+		            	completedArg = tokens[4].substr(cursor, k-cursor);
+		            	
+
 		            	//setUppercase()
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	            	
 		            	tempValue.dataMembers.push_back(completedArg);
-		            	cout << completedArg << endl;
 		            }
 		            else
 		            {
 
-		            	completedArg = tokens[4].substr(cursor+2, k-cursor-2);
+		            	completedArg = tokens[4].substr(cursor+1, k-cursor-1);
+		            	cursor++;
 		            	//setUppercase()
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
 		          	 	tempValue.dataMembers.push_back(completedArg);
-		          	 	cout << completedArg << endl;
+		          	 	//cout << completedArg << endl;
 		            }
 		            cursor=k++;
 		        }
 
 			}	
 
-			completedArg = tokens[4].substr(cursor+1);
+			completedArg = tokens[4].substr(cursor);
+
 			k=0;
 			cursor = 0;
 			for(k; k < completedArg.size();k++)
@@ -529,10 +537,20 @@ bool insert(vector <string> tokens)
 				{
 					cursor++;
 				}
-				if(completedArg.at(k)==';')
+				if( completedArg.at(k)=='.' )
 				{
-					completedArg = completedArg.substr(completedArg.size() - (cursor+3), cursor+1);
-		          	 	cout << completedArg << endl;
+					cursor++;
+				}
+				if( completedArg.at(k)=='\'' )
+				{
+					completedArg = completedArg.substr(k,completedArg.size() - k - 2);
+
+					break;
+
+				}
+				if(completedArg.at(k)==')')
+				{
+					completedArg = completedArg.substr(completedArg.size() - (cursor+2), cursor);
 
 				}
 			}	
@@ -726,8 +744,9 @@ void printQueryTable(values currentEntry, std::vector <string> Atributes, int ta
 void printTable(table currentTable){
 	for(int p=0; p<currentTable.arguments.size(); p++)
 	{
-		if(p == currentTable.arguments.size() - 1)
-			cout << currentTable.arguments[p] << endl;
+		if(p == currentTable.arguments.size() - 1){
+			//cout << currentTable.arguments[p] << endl;
+		}
 		else
 			cout << currentTable.arguments[p] << " | ";
 	}
