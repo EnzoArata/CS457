@@ -1,0 +1,4 @@
+###BUILD INSTRUCTIONS
+-Make and compile by running "g++ main.cpp" in the terminal
+###RUNNING THE PROGRAM
+-Use command "./a.out PA1_test.sql"
