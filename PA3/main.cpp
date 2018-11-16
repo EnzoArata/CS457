@@ -52,6 +52,9 @@ string removeEnd(string cleanString);
 
 string setUppercase(std::string token);
 bool selectFromQuery(vector <string> Atributes, string Name, vector <string> tokens);
+bool selectJoin(vector <string> Atributes, vector <string> tokens);
+bool innerJoin(vector <string> Atributes, string firstTable, string secondTable);
+bool outerJoin(vector <string> Atributes, string firstTable, string secondTable, bool innerOuter);
 
 
 
@@ -116,8 +119,7 @@ int main( int argc, char *argv[] ){
         //Calls on parsing function for current input line
 		commands = commandParse(input[inputLine]);
 		nameSelection.clear();
-
-
+		//cout << commands.size() << endl;
         //Checks tokens of string to decipher command
 		if (commands[0] == "CREATE")
 		{
@@ -162,13 +164,27 @@ int main( int argc, char *argv[] ){
 
 		else if (commands[0] == "SELECT")
 		{
-			if (commands[1] == "*"){
-            	if (commands[2] == "FROM"){
+			//cout << commands[2] << endl;
+			if (commands[1] == "*")
+			{
+				
+				if(commands.size() ==1 || commands.size() ==2|| commands.size() ==3)
+				{
+					
+					inputLine++;
+					commands = commandParse(input[inputLine]);
+					inputLine++;
+					selectJoin(commands,commandParse(input[inputLine]));
+					continue;
+				}
+            	if (commands[2] == "FROM")
+            	{
+
             		selectFrom(commands);
             		continue;
             	}
 
-           		
+
             }
             for (int names = 1; names<commands.size();names++){
             	nameSelection.push_back(commands[names]);
@@ -1141,4 +1157,68 @@ string setUppercase(std::string token){
 	
 	transform(token.begin(), token.end(), token.begin(), std::ptr_fun<int, int>(std::toupper));
 	return token;
+}
+
+bool selectJoin(vector <string> Atributes, vector <string> tokens)
+{
+	/*for(int i=0;i<Atributes.size();i++)
+	{
+		cout << Atributes[i] << endl;
+
+	}
+	for(int i=0;i<tokens.size();i++)
+	{
+		cout << tokens[i] << endl;
+		
+	}*/
+	//CHecking if table exist
+	if(Atributes[0]=="FROM")
+	{
+		for (int i=0; i<databaseList[useIndex].tables.size(); i++)
+	    {
+	        if(Atributes[1] == databaseList[useIndex].tables[i].name)
+	        {
+	        	//cout << "table 1 found"<< endl;
+	        	//Skipping Attribute[2](variable name), not used, checking for JOINS
+	        	if(Atributes[3] == "LEFT")
+	        	{
+	        		outerJoin(tokens, Atributes[1], Atributes[6], 0);
+	        		
+	        	}
+	        	else if(Atributes[3] == "RIGHT")
+	        	{
+	        		outerJoin(tokens, Atributes[1], Atributes[6], 1);
+	        		
+	        	}
+	        	else if(Atributes[3] == "INNER")
+	        	{
+	        		innerJoin(tokens,Atributes[1], Atributes[5] );
+	        		
+	        	}
+	        	else
+	        	{
+	        		innerJoin(tokens, Atributes[1], Atributes[3]);
+	        		
+	        	}
+	        	return 1;
+	        }
+
+	    }
+	    cout << "-- !Failed to print from table " << Atributes[1] << " because it does not exist" << endl;
+	    return 0;
+	}
+	return 1;
+}
+
+bool innerJoin(vector <string> Atributes, string firstTable, string secondTable)
+{
+	cout << "inner join" << endl;
+	cout << firstTable << " " << secondTable << endl;
+	return 1;
+}
+bool outerJoin(vector <string> Atributes,string firstTable, string secondTable ,bool innerOuter)
+{
+	cout << "outer join" << endl;
+	cout << firstTable << " " << secondTable << endl;
+	return 1;
 }
