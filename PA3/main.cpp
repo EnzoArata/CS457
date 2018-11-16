@@ -83,6 +83,7 @@ struct dataBase{
 
 void printTable(table currentTable);
 void printValues(int tableIndex, int valueIndex);
+void printNullValues(int tableIndex, int valueIndex);
 void printQueryTable(values currentEntry, std::vector <string> Attributes, int tableSelected);
 
 vector <dataBase> databaseList;
@@ -1253,6 +1254,8 @@ bool innerJoin(vector <string> Atributes, string firstTable, string secondTable,
 
 		}
 	}
+
+	//Printing name of arguments for both tables
 	for(int i=0;i<databaseList[useIndex].tables[firstIndex].arguments.size();i++)
 	{
 		cout << databaseList[useIndex].tables[firstIndex].arguments[i] << " | ";
@@ -1284,6 +1287,47 @@ bool innerJoin(vector <string> Atributes, string firstTable, string secondTable,
 			}
 		}
 	}
+	if(Atributes[2].at(0) == '>' )
+	{
+
+		for(int g=0; g<databaseList[useIndex].tables[firstIndex].tableValues.size(); g++)
+		{
+			
+			for(int m=0; m<databaseList[useIndex].tables[secondIndex].tableValues.size(); m++)
+			{
+				tempFloat = stof (databaseList[useIndex].tables[firstIndex].tableValues[g].dataMembers[firstArgumentIndex] ,&sz);
+				tempFloat2 = stof (databaseList[useIndex].tables[secondIndex].tableValues[m].dataMembers[secondArgumentIndex] ,&sz);
+				if(tempFloat > tempFloat2)
+				{
+					printValues(firstIndex, g);
+					cout << " | ";
+					printValues(secondIndex, m);
+					cout << endl;
+				}
+			}
+		}
+	}
+	if(Atributes[2].at(0) == '<' )
+	{
+
+		for(int g=0; g<databaseList[useIndex].tables[firstIndex].tableValues.size(); g++)
+		{
+			
+			for(int m=0; m<databaseList[useIndex].tables[secondIndex].tableValues.size(); m++)
+			{
+				tempFloat = stof (databaseList[useIndex].tables[firstIndex].tableValues[g].dataMembers[firstArgumentIndex] ,&sz);
+				tempFloat2 = stof (databaseList[useIndex].tables[secondIndex].tableValues[m].dataMembers[secondArgumentIndex] ,&sz);
+				if(tempFloat > tempFloat2)
+				{
+					printValues(firstIndex, g);
+					cout << " | ";
+					printValues(secondIndex, m);
+					cout << endl;
+				}
+			}
+		}
+	}
+	
 
 	return 1;
 }
@@ -1297,9 +1341,231 @@ void printValues(int tableIndex, int valueIndex)
 			cout << databaseList[useIndex].tables[tableIndex].tableValues[valueIndex].dataMembers[i] << " | ";
 	}
 }
+void printNullValues(int tableIndex, int valueIndex)
+{
+	for(int i=0;i<databaseList[useIndex].tables[tableIndex].arguments.size();i++)
+	{
+		if(i==databaseList[useIndex].tables[tableIndex].arguments.size() - 1)
+			cout << " ";
+		else
+			cout << " | ";
+	}
+}
 bool outerJoin(vector <string> Atributes,string firstTable, string secondTable ,int firstIndex, bool innerOuter)
 {
-	//cout << "outer join" << endl;
-	//cout << firstTable << " " << secondTable << endl;
+	vector<string> newString;
+	string firstArgument;
+	string secondArgument;
+	int secondIndex = 0;
+	int firstArgumentIndex = 0;
+	int secondArgumentIndex = 0;
+	firstArgument = Atributes[1].substr(2);
+	secondArgument = Atributes[3].substr(2);
+	secondArgument = secondArgument.substr(0, secondArgument.size()-1);
+	int changes= 0;
+	string::size_type sz; 
+	float tempFloat;
+	float tempFloat2;
+	int printFlag = 0;
+	//Finding which argument is comparted in table 1
+	for(int j=0; j<databaseList[useIndex].tables[firstIndex].arguments.size();j++)
+	{
+
+		newString = splitString(databaseList[useIndex].tables[firstIndex].arguments[j]);
+		newString[0] = setUppercase(newString[0]);
+		firstArgument = setUppercase(firstArgument);
+		if(newString[0] == firstArgument)
+		{
+			firstArgumentIndex = j;
+
+		}
+	}
+	//Finding index of table 2
+	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
+    {
+    	if(secondTable == databaseList[useIndex].tables[i].name)
+    	{
+    		secondIndex = i;
+    		
+    	}
+    }
+    //Finding which argument is compared in second table
+    for(int j=0; j<databaseList[useIndex].tables[firstIndex].arguments.size();j++)
+	{
+
+		newString = splitString(databaseList[useIndex].tables[secondIndex].arguments[j]);
+		newString[0] = setUppercase(newString[0]);
+		secondArgument = setUppercase(secondArgument);
+		if(newString[0] == secondArgument)
+		{
+			secondArgumentIndex = j;
+
+		}
+	}
+	//Printing name of arguments for both tables
+	for(int i=0;i<databaseList[useIndex].tables[firstIndex].arguments.size();i++)
+	{
+		cout << databaseList[useIndex].tables[firstIndex].arguments[i] << " | ";
+	}
+	for(int i=0;i<databaseList[useIndex].tables[secondIndex].arguments.size();i++)
+	{
+		if(i==databaseList[useIndex].tables[secondIndex].arguments.size() - 1)
+			cout << databaseList[useIndex].tables[secondIndex].arguments[i] << endl;
+		else
+			cout << databaseList[useIndex].tables[secondIndex].arguments[i] << " | ";
+	}
+	if(Atributes[2].at(0) == '=' )
+	{
+
+		for(int g=0; g<databaseList[useIndex].tables[firstIndex].tableValues.size(); g++)
+		{
+			printFlag=0;
+			for(int m=0; m<databaseList[useIndex].tables[secondIndex].tableValues.size(); m++)
+			{
+				if(databaseList[useIndex].tables[firstIndex].tableValues[g].dataMembers[firstArgumentIndex]
+					== databaseList[useIndex].tables[secondIndex].tableValues[m].dataMembers[secondArgumentIndex])
+				{
+					if(innerOuter)
+					{
+						printValues(secondIndex, m);
+						cout << " | ";
+						printValues(firstIndex, g);
+						cout << endl;
+						printFlag = 1;
+					}
+					else
+					{
+						printValues(firstIndex, g);
+						cout << " | ";
+						printValues(secondIndex, m);
+						cout << endl;
+						printFlag = 1;
+					}
+					
+				}
+			}
+			if(printFlag ==0)
+			{
+				if(innerOuter)
+				{
+					printNullValues(secondIndex, g);
+					
+					cout << " | ";
+					printValues(firstIndex, g);
+					cout << endl;
+				}
+				else //Outer Left Print
+				{
+					printValues(firstIndex, g);
+					cout << " | ";
+					printNullValues(secondIndex, g);
+					cout << endl;
+				}
+			}
+		}
+	}
+	if(Atributes[2].at(0) == '>' )
+	{
+
+		for(int g=0; g<databaseList[useIndex].tables[firstIndex].tableValues.size(); g++)
+		{
+			printFlag=0;
+			for(int m=0; m<databaseList[useIndex].tables[secondIndex].tableValues.size(); m++)
+			{
+				tempFloat = stof (databaseList[useIndex].tables[firstIndex].tableValues[g].dataMembers[firstArgumentIndex] ,&sz);
+				tempFloat2 = stof (databaseList[useIndex].tables[secondIndex].tableValues[m].dataMembers[secondArgumentIndex] ,&sz);
+				if(tempFloat > tempFloat2)
+				{
+					if(innerOuter)
+					{
+						printValues(secondIndex, m);
+						cout << " | ";
+						printValues(firstIndex, g);
+						cout << endl;
+						printFlag = 1;
+					}
+					else
+					{
+						printValues(firstIndex, g);
+						cout << " | ";
+						printValues(secondIndex, m);
+						cout << endl;
+						printFlag = 1;
+					}
+				}
+				if(printFlag ==0)
+				{
+					if(innerOuter)
+					{
+						printNullValues(secondIndex, g);
+						
+						cout << " | ";
+						printValues(firstIndex, g);
+						cout << endl;
+					}
+					else //Outer Left Print
+					{
+						printValues(firstIndex, g);
+						cout << " | ";
+						printNullValues(secondIndex, g);
+						cout << endl;
+					}
+					
+				}
+			}
+		}
+	}
+	if(Atributes[2].at(0) == '<' )
+	{
+
+		for(int g=0; g<databaseList[useIndex].tables[firstIndex].tableValues.size(); g++)
+		{
+			
+			for(int m=0; m<databaseList[useIndex].tables[secondIndex].tableValues.size(); m++)
+			{
+				tempFloat = stof (databaseList[useIndex].tables[firstIndex].tableValues[g].dataMembers[firstArgumentIndex] ,&sz);
+				tempFloat2 = stof (databaseList[useIndex].tables[secondIndex].tableValues[m].dataMembers[secondArgumentIndex] ,&sz);
+				if(tempFloat > tempFloat2)
+				{
+					if(innerOuter)
+					{
+						printValues(secondIndex, m);
+						cout << " | ";
+						printValues(firstIndex, g);
+						cout << endl;
+						printFlag = 1;
+					}
+					else
+					{
+						printValues(firstIndex, g);
+						cout << " | ";
+						printValues(secondIndex, m);
+						cout << endl;
+						printFlag = 1;
+					}
+				}
+				if(printFlag ==0)
+				{
+					if(innerOuter)
+					{
+						printNullValues(secondIndex, g);
+						
+						cout << " | ";
+						printValues(firstIndex, g);
+						cout << endl;
+					}
+					else //Outer Left Print
+					{
+						printValues(firstIndex, g);
+						cout << " | ";
+						printNullValues(secondIndex, g);
+						cout << endl;
+					}
+				}
+			}	
+		}
+	}		
+
+
 	return 1;
 }
