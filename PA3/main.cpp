@@ -374,7 +374,7 @@ bool argumentParse(string t_arg)
     int i=1;
     string completedArg;
     string chopped;
-	int cursor = 1;
+	int cursor = 0;
 
     for(i; i < t_arg.size();i++)
     {
@@ -385,6 +385,7 @@ bool argumentParse(string t_arg)
             completedArg = t_arg.substr(cursor+1, i-cursor-1);
             //cout << useIndex << " " << tableIndex << endl;
             completedArg = removeFrontSpaces(completedArg);
+            //cout << completedArg << endl;
 			//databaseList[useIndex].tables[databaseList[useIndex].tableIndex].args++;
             databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.push_back(completedArg);
             completedArg = "";
@@ -404,9 +405,14 @@ bool argumentParse(string t_arg)
         chopped = t_arg.substr(cursor+2);
         chopped = chopped.substr(0, chopped.size()-2);
 	}
+	//cout << chopped << endl;
     databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.push_back(chopped);
 
     cout << "-- Table " << databaseList[useIndex].tables[databaseList[useIndex].tableIndex].name << " created." << endl;
+    /*for(int p =0; p<databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.size();p++)
+    {
+    	cout << databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments[p] << endl;
+    }*/
 
     return 1;
 
@@ -745,7 +751,7 @@ void printTable(table currentTable){
 	for(int p=0; p<currentTable.arguments.size(); p++)
 	{
 		if(p == currentTable.arguments.size() - 1){
-			//cout << currentTable.arguments[p] << endl;
+			cout << currentTable.arguments[p] << endl;
 		}
 		else
 			cout << currentTable.arguments[p] << " | ";
