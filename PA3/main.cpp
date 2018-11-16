@@ -46,6 +46,7 @@ bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string
 
 
 
+
 string removeFrontSpaces(string cleanString);
 vector <string> splitString(string splitString);
 string removeEnd(string cleanString);
@@ -53,8 +54,8 @@ string removeEnd(string cleanString);
 string setUppercase(std::string token);
 bool selectFromQuery(vector <string> Atributes, string Name, vector <string> tokens);
 bool selectJoin(vector <string> Atributes, vector <string> tokens);
-bool innerJoin(vector <string> Atributes, string firstTable, string secondTable);
-bool outerJoin(vector <string> Atributes, string firstTable, string secondTable, bool innerOuter);
+bool innerJoin(vector <string> Atributes, string firstTable, string secondTable, int firstIndex);
+bool outerJoin(vector <string> Atributes, string firstTable, string secondTable, int firstIndex, bool innerOuter);
 
 
 
@@ -81,7 +82,7 @@ struct dataBase{
 };
 
 void printTable(table currentTable);
-void printCutTable(table currentTable, vector <string> Atributes);
+void printValues(int tableIndex, int valueIndex);
 void printQueryTable(values currentEntry, std::vector <string> Attributes, int tableSelected);
 
 vector <dataBase> databaseList;
@@ -1161,43 +1162,35 @@ string setUppercase(std::string token){
 
 bool selectJoin(vector <string> Atributes, vector <string> tokens)
 {
-	/*for(int i=0;i<Atributes.size();i++)
-	{
-		cout << Atributes[i] << endl;
-
-	}
-	for(int i=0;i<tokens.size();i++)
-	{
-		cout << tokens[i] << endl;
-		
-	}*/
-	//CHecking if table exist
+	int first = 0;
+	int second = 0;
 	if(Atributes[0]=="FROM")
 	{
-		for (int i=0; i<databaseList[useIndex].tables.size(); i++)
+		
+		for (int first=0; first<databaseList[useIndex].tables.size(); first++)
 	    {
-	        if(Atributes[1] == databaseList[useIndex].tables[i].name)
+	        if(Atributes[1] == databaseList[useIndex].tables[first].name)
 	        {
 	        	//cout << "table 1 found"<< endl;
 	        	//Skipping Attribute[2](variable name), not used, checking for JOINS
 	        	if(Atributes[3] == "LEFT")
 	        	{
-	        		outerJoin(tokens, Atributes[1], Atributes[6], 0);
+	        		outerJoin(tokens, Atributes[1], Atributes[6], first, 0);
 	        		
 	        	}
 	        	else if(Atributes[3] == "RIGHT")
 	        	{
-	        		outerJoin(tokens, Atributes[1], Atributes[6], 1);
+	        		outerJoin(tokens, Atributes[1], Atributes[6], first, 1);
 	        		
 	        	}
 	        	else if(Atributes[3] == "INNER")
 	        	{
-	        		innerJoin(tokens,Atributes[1], Atributes[5] );
+	        		innerJoin(tokens,Atributes[1], Atributes[5], first);
 	        		
 	        	}
 	        	else
 	        	{
-	        		innerJoin(tokens, Atributes[1], Atributes[3]);
+	        		innerJoin(tokens, Atributes[1], Atributes[3], first);
 	        		
 	        	}
 	        	return 1;
@@ -1210,15 +1203,103 @@ bool selectJoin(vector <string> Atributes, vector <string> tokens)
 	return 1;
 }
 
-bool innerJoin(vector <string> Atributes, string firstTable, string secondTable)
+bool innerJoin(vector <string> Atributes, string firstTable, string secondTable, int firstIndex)
 {
-	cout << "inner join" << endl;
-	cout << firstTable << " " << secondTable << endl;
+	vector<string> newString;
+	string firstArgument;
+	string secondArgument;
+	int secondIndex = 0;
+	int firstArgumentIndex = 0;
+	int secondArgumentIndex = 0;
+	firstArgument = Atributes[1].substr(2);
+	secondArgument = Atributes[3].substr(2);
+	secondArgument = secondArgument.substr(0, secondArgument.size()-1);
+	int changes= 0;
+	string::size_type sz; 
+	float tempFloat;
+	float tempFloat2;
+	//Finding which argument is comparted in table 1
+	for(int j=0; j<databaseList[useIndex].tables[firstIndex].arguments.size();j++)
+	{
+
+		newString = splitString(databaseList[useIndex].tables[firstIndex].arguments[j]);
+		newString[0] = setUppercase(newString[0]);
+		firstArgument = setUppercase(firstArgument);
+		if(newString[0] == firstArgument)
+		{
+			firstArgumentIndex = j;
+
+		}
+	}
+	//Finding index of table 2
+	for (int i=0; i<databaseList[useIndex].tables.size(); i++)
+    {
+    	if(secondTable == databaseList[useIndex].tables[i].name)
+    	{
+    		secondIndex = i;
+    		
+    	}
+    }
+    //Finding which argument is compared in second table
+    for(int j=0; j<databaseList[useIndex].tables[firstIndex].arguments.size();j++)
+	{
+
+		newString = splitString(databaseList[useIndex].tables[secondIndex].arguments[j]);
+		newString[0] = setUppercase(newString[0]);
+		secondArgument = setUppercase(secondArgument);
+		if(newString[0] == secondArgument)
+		{
+			secondArgumentIndex = j;
+
+		}
+	}
+	for(int i=0;i<databaseList[useIndex].tables[firstIndex].arguments.size();i++)
+	{
+		cout << databaseList[useIndex].tables[firstIndex].arguments[i] << " | ";
+	}
+	for(int i=0;i<databaseList[useIndex].tables[secondIndex].arguments.size();i++)
+	{
+		if(i==databaseList[useIndex].tables[secondIndex].arguments.size() - 1)
+			cout << databaseList[useIndex].tables[secondIndex].arguments[i] << endl;
+		else
+			cout << databaseList[useIndex].tables[secondIndex].arguments[i] << " | ";
+	}
+	//cout << firstArgumentIndex << " "<< secondArgumentIndex << endl;
+	if(Atributes[2].at(0) == '=' )
+	{
+
+		for(int g=0; g<databaseList[useIndex].tables[firstIndex].tableValues.size(); g++)
+		{
+			
+			for(int m=0; m<databaseList[useIndex].tables[secondIndex].tableValues.size(); m++)
+			{
+				if(databaseList[useIndex].tables[firstIndex].tableValues[g].dataMembers[firstArgumentIndex]
+					== databaseList[useIndex].tables[secondIndex].tableValues[m].dataMembers[secondArgumentIndex])
+				{
+					printValues(firstIndex, g);
+					cout << " | ";
+					printValues(secondIndex, m);
+					cout << endl;
+				}
+			}
+		}
+	}
+
 	return 1;
 }
-bool outerJoin(vector <string> Atributes,string firstTable, string secondTable ,bool innerOuter)
+void printValues(int tableIndex, int valueIndex)
 {
-	cout << "outer join" << endl;
-	cout << firstTable << " " << secondTable << endl;
+	for(int i=0;i<databaseList[useIndex].tables[tableIndex].arguments.size();i++)
+	{
+		if(i==databaseList[useIndex].tables[tableIndex].arguments.size() - 1)
+			cout << databaseList[useIndex].tables[tableIndex].tableValues[valueIndex].dataMembers[i];
+		else
+			cout << databaseList[useIndex].tables[tableIndex].tableValues[valueIndex].dataMembers[i] << " | ";
+	}
+}
+bool outerJoin(vector <string> Atributes,string firstTable, string secondTable ,int firstIndex, bool innerOuter)
+{
+	//cout << "outer join" << endl;
+	//cout << firstTable << " " << secondTable << endl;
 	return 1;
 }
