@@ -1172,10 +1172,11 @@ bool selectJoin(vector <string> Atributes, vector <string> tokens)
 	    {
 	        if(Atributes[1] == databaseList[useIndex].tables[first].name)
 	        {
-	        	//cout << "table 1 found"<< endl;
+	        	
 	        	//Skipping Attribute[2](variable name), not used, checking for JOINS
 	        	if(Atributes[3] == "LEFT")
 	        	{
+
 	        		outerJoin(tokens, Atributes[1], Atributes[6], first, 0);
 	        		
 	        	}
@@ -1191,6 +1192,7 @@ bool selectJoin(vector <string> Atributes, vector <string> tokens)
 	        	}
 	        	else
 	        	{
+	        		//defaults to inner if syntax not specified
 	        		innerJoin(tokens, Atributes[1], Atributes[3], first);
 	        		
 	        	}
@@ -1267,7 +1269,7 @@ bool innerJoin(vector <string> Atributes, string firstTable, string secondTable,
 		else
 			cout << databaseList[useIndex].tables[secondIndex].arguments[i] << " | ";
 	}
-	//cout << firstArgumentIndex << " "<< secondArgumentIndex << endl;
+	//query for =
 	if(Atributes[2].at(0) == '=' )
 	{
 
@@ -1287,6 +1289,7 @@ bool innerJoin(vector <string> Atributes, string firstTable, string secondTable,
 			}
 		}
 	}
+	//query for >
 	if(Atributes[2].at(0) == '>' )
 	{
 
@@ -1307,6 +1310,7 @@ bool innerJoin(vector <string> Atributes, string firstTable, string secondTable,
 			}
 		}
 	}
+	//quiery for <
 	if(Atributes[2].at(0) == '<' )
 	{
 
@@ -1341,6 +1345,7 @@ void printValues(int tableIndex, int valueIndex)
 			cout << databaseList[useIndex].tables[tableIndex].tableValues[valueIndex].dataMembers[i] << " | ";
 	}
 }
+//used for outer joins to print null values instead of arguments
 void printNullValues(int tableIndex, int valueIndex)
 {
 	for(int i=0;i<databaseList[useIndex].tables[tableIndex].arguments.size();i++)
