@@ -304,6 +304,7 @@ int main( int argc, char *argv[] ){
 		else if (commands[0] == "UPDATE")
 		{
 			if (transactionActive){
+				//Check to see format of Update Line
 				if(commands.size() > 2)
             	{
             		/*if(find(existingLocks.begin(), existingLocks.end(), commands[1]) != existingLocks.end()) {
@@ -1761,14 +1762,15 @@ bool outerJoin(vector <string> Atributes,string firstTable, string secondTable ,
 	return 1;
 }
 
-
+//Function to write existing table to file and overwrite existing written data
 bool writeTable(int tableSelected)
 {
+	//Check to see if table exists
 	if(tableSelected>databaseList[useIndex].tables.size())
 		return false;
 	if(databaseList[useIndex].tables.size() ==0)
 		return false;
-
+	//Outputting to file databaseName-tableName
 	string newFile = databaseList[useIndex].name + "-" + databaseList[useIndex].tables[tableSelected].name;
     std::ofstream outfile(newFile);
     for(int p=0;p<databaseList[useIndex].tables[tableSelected].arguments.size();p++)
@@ -1838,7 +1840,7 @@ bool updateLock(bool clear)
     lockOutput.close();
     return true;
 }
-
+//function to sync written data to proccess
 bool synch()
 {
 
@@ -1858,6 +1860,7 @@ bool synch()
     int y =0;
     int tableCount = 0;
     int dataBaseCount = 0;
+    //Creates databases using database file
     while(getline(inFile, currentLine))
     {
 
@@ -1868,7 +1871,8 @@ bool synch()
     inFile.close();
 
 
-    
+    //Creates tables using file that holds database tables
+    //Then fills tables with info using assocciated table file
     for(int i=0; i< databaseList.size();i++)
     {
     	newFile = databaseList[i].name + "-tables";
@@ -1883,6 +1887,7 @@ bool synch()
     		getline(tableFile, currentLine);
 
     		cursor = 0;
+    		//Loop to save table arguments
     		for( y=0;y<currentLine.size();y++)
     		{
 
@@ -1900,7 +1905,7 @@ bool synch()
     		databaseList[i].tables[tableCount].arguments.push_back(tempString);
     		cursor =0;
     		
-
+    		//Loop to save tuples into table
 	    	while(getline(tableFile,currentLine))
 	    	{
 	    		//cout << currentLine << endl;
