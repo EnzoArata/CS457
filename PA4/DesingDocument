@@ -1,0 +1,21 @@
+Enzo Arata
+Zachary Mcilwain
+
+
+In order to manage our databases we have a vector of structs named dataBases that holds 3 data type. An int that we use for indexing, a string for the name of the dataBase and a Vector of structs of type Tables that has two data types, an integer for number of arguments and a vector of strings for table names.
+
+We essentially have a vector of databases that each have a corresponding vector of table. In this way we can check what dataBases exist and which tables exist in which database. This way we know if a database already exists or if a table in a given database already exists. We file input into a vector of strings. We then have a function to parse the string into tokens exlcuding spaces, we then analyze those tokens to figure out what command is being run. Based on the command we have a series of functions to create and drop(push/pop) our vectors of data bases and tables. We also have functions to select from tables to print their corresponding data, as well as an add function that can add data to tables. We have an additional string parser that is used to create the tokens for our tables, (arg char[20] , arg float). 
+
+TUPLES
+
+
+How we manage tuples is that we edited our table struct to include a vector of struct of type values, that holds a vector of strings. This way each table can have a dynamic amount of entries(TUPLES) stored. TUPLES are stored by popping back strings into the vector of strings and is done dynamicaly to mirror the amount of arguments that a given table would have. An example of this would be for the command "insert into Product values(5,	'SuperGizmo', 	49.99);" the strings '5', 'SuperGizmo' and '49.99' would all be popped into our table structs vector of values.This way the amount and length of each entry will be calculated dynamically. When data is modified we directly change the data by accessing it at tables[SelectedTable].values[selectedEntry].data[argument], where data is representitive of the string of arguments. When we need to delete data we simply use the vector erase function.
+
+QUERY
+
+In order to query we use the broken up input strings to determine what operator we have recieved(=,!=, <, >). Once the operator is recieved we are able to check the data against the given query. Such as checking if a value is less then the input. Once the location of data is confirmed then data is either modified or deleted or printed.
+
+
+JOINS
+
+In order to use joins the first thing that I do is call a function selectJoin that determines if the command is an inner join or, left/right outer join. After that it calls on the appropriate function outerJoin or innerJoin. Both of these functions get both tables and then find which argument is being compared and saved that location. Then using a for loop i cycle through all argument values for each table and see if it meets the query. innerJoin alwasy prints the same way and outerJOin will print differently for left or right.
