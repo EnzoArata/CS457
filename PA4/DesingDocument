@@ -19,3 +19,16 @@ In order to query we use the broken up input strings to determine what operator 
 JOINS
 
 In order to use joins the first thing that I do is call a function selectJoin that determines if the command is an inner join or, left/right outer join. After that it calls on the appropriate function outerJoin or innerJoin. Both of these functions get both tables and then find which argument is being compared and saved that location. Then using a for loop i cycle through all argument values for each table and see if it meets the query. innerJoin alwasy prints the same way and outerJOin will print differently for left or right.
+
+PHYSICAL STORAGE
+
+In order for seperate proccesses to be able to use the same date we needed to implement physical storage. To start this off we have a text document name DataBaseList that stores all created databases. Everytime a table is created, the associated database has a file created or edits to show that it has that table. This file reflects all current tables that a database has, its naming convention follows "name of database"-tables. Each table has its own text file that is named "database name"-"table name". This text file is responsible for storing all table data, including the tables arguments and any tuple that has been inserted into it. 
+
+SYNCHING
+
+Once physical storage was created we needed a Synch function to be able to update new proccesses to what data has already been created. The synch functions uses the carious text files to create new Database data and then table data as well as any tuple that has been saved. The Synch functions is called once when a process starts, so the proccess only updates to existing information once.
+
+
+LOCKING
+
+In order to solve our locking problem we have a textfile named "Locked_Tables". In this text file, any table that is being worked on will be printed to the file. This way we can check if a table is locked by simple checking the file and referecning any table bname that is inside. We also remove the lock from tables once a commit is made.
