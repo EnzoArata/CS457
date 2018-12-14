@@ -22,19 +22,12 @@ select * from Product;
 select * from bepis;
 
 --Modify data (20 points)
-<<<<<<< HEAD
-update Product 
-set name = 'Gizmo' 
-where name = 'SuperGizmo';
-
-update Product 
-=======
+begin transaction;
 update Product  
 set name = 'Gizmo' 
 where name = 'SuperGizmo';
 
 update Product  
->>>>>>> 86461356e04e7b431fc415b8a87dd5a17aada52d
 set price = 14.99 
 where name = 'Gizmo';
 
@@ -47,7 +40,7 @@ where height = 9;
 update bepis 
 set height = 3 
 where price > 20;
-
+commit;
 select * from bepis;
 
 
@@ -55,11 +48,11 @@ select * from bepis;
 delete from product 
 where name = 'PowerGizmo';
 
---delete from product 
---where name = 'Gizmo';
+delete from product 
+where name = 'Gizmo';
 
---delete from product 
---where price > 175.99;
+delete from product 
+where price > 175.99;
 
 
 

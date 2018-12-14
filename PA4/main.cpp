@@ -50,7 +50,7 @@ bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string
 
 bool writeTable(int tableSelected);
 bool synch();
-bool updateLock();
+bool updateLock(bool clear);
 
 
 
@@ -114,6 +114,8 @@ int main( int argc, char *argv[] ){
 	//inFile = fopen(argv[2],"r");
     inFile.open(argv[1]);
     synch();
+	updateLock(0);
+
 
    // File input into a vector of strings, igoring lines with "--"
 	string currentLine;
@@ -130,7 +132,6 @@ int main( int argc, char *argv[] ){
 	bool transactionActive = false;
 	for(int inputLine = 0; inputLine < input.size()+1; inputLine++)
 	{
-		updateLock();
 		if (inputLine == input.size()){
 			string command;
 			getline(cin, command);
@@ -146,7 +147,7 @@ int main( int argc, char *argv[] ){
 		if (commands[0] == "BEGIN")
 		{
 			if (commands[1] == "TRANSACTION" || commands[1] == "TRANSACTION;"){
-				cout << "starting transaction" << endl;
+				//cout << "starting transaction" << endl;
 				inputLine++;
 				if (inputLine == input.size()){
 					string command;
@@ -169,7 +170,8 @@ int main( int argc, char *argv[] ){
 
 		if (commands[0] == "COMMIT" || commands[0] == "COMMIT;"){
 			transactionActive = false;
-			cout << "ending transaction" << endl;
+			updateLock(1);
+			cout << "-- commiting transaction" << endl;
 		}
 
 
@@ -298,7 +300,8 @@ int main( int argc, char *argv[] ){
 
 		else if (commands[0] == "UPDATE")
 		{
-            	inputLine++;
+			if (transactionActive){
+				inputLine++;
 
             	if (inputLine == input.size()){
 					string command;
@@ -311,8 +314,13 @@ int main( int argc, char *argv[] ){
 		   			cout << "-- Cannot edit this table because it is locked!" << endl;
 		   			continue;
 				} else {
-		    		/* v does not contain x */
-		    		LockedTables.push_back(commands[1]);
+					if(find(LockedTables.begin(), LockedTables.end(), commands[1]) != LockedTables.end()) {
+		   			/* v contains x */
+		   			} else {
+						/* v does not contain x */
+		    			LockedTables.push_back(commands[1]);
+		   			}
+		    		
 				}
             	
             	commands = commandParse(input[inputLine]);
@@ -325,6 +333,10 @@ int main( int argc, char *argv[] ){
 
             	commandQuery = commandParse(input[inputLine]);
             	update(nameSelection[0], commands, commandQuery);
+			} else {
+				cout << "cannot update while transaction is not active" << endl;
+			}
+
   
 		}
 
@@ -332,6 +344,8 @@ int main( int argc, char *argv[] ){
 		else if (commands[0] == "EXIT")
 		{
             cout << "-- Exiting program" << endl;
+            updateLock(1);
+
 			return 0;
 		}
 
@@ -343,7 +357,10 @@ int main( int argc, char *argv[] ){
 		else {
 			cout << "-- Command not recognized" << endl;
 		}
+		updateLock(0);
+
 	}
+
 
 	/*string s = "149.99";
 	float tempFloat;
@@ -1739,7 +1756,7 @@ bool writeTable(int tableSelected)
     return true;
 }
 
-bool updateLock()
+bool updateLock(bool clear)
 {
 	string lockFile = "Locked_Tables";
 	ifstream lockData;
@@ -1760,7 +1777,9 @@ bool updateLock()
 		}
 	}
 	lockData.close();
-
+	if (clear) {
+		LockedTables.clear();
+	}
 	ofstream lockOutput;
 	lockOutput.open (lockFile, std::ofstream::trunc);
 
@@ -1775,7 +1794,6 @@ bool updateLock()
     for(int i=0; i<LockedTables.size();i++)
     {
     	lockOutput << LockedTables[i] << endl;
-    	cout << "writing new lock" << endl;
     }
 
     lockOutput.close();
@@ -1885,4 +1903,5 @@ bool synch()
     //cout << "wee" << endl;
     //writeTable(0);
     //writeTable(1);
+    return true;
 }
