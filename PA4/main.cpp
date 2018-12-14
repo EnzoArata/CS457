@@ -306,6 +306,19 @@ int main( int argc, char *argv[] ){
 			if (transactionActive){
 				if(commands.size() > 2)
             	{
+            		/*if(find(existingLocks.begin(), existingLocks.end(), commands[1]) != existingLocks.end()) {
+			   			/* v contains x */
+			   		/*	cout << "-- Cannot edit this table because it is locked!" << endl;
+			   			continue;
+					} else {
+						if(find(LockedTables.begin(), LockedTables.end(), commands[1]) != LockedTables.end()) {
+			   			/* v contains x */
+			   		/*	} else {
+							/* v does not contain x */
+			    	/*		LockedTables.push_back(commands[1]);
+			   			}
+			    		
+					}*/
             		updateCount=0;
             		for(int h=2;h<=5;h++)
             		{
@@ -314,16 +327,6 @@ int main( int argc, char *argv[] ){
             		for(int h=6;h<= 9;h++)
             		{
             			whereCommand.push_back(commands[h]);
-            		}
-            		cout << "weee" << endl;
-            		for(int b=0;b<setCommand.size();b++)
-            		{
-            			cout << setCommand[b] << endl;
-            		}
-
-            		for(int b=0;b<whereCommand.size();b++)
-            		{
-            			cout << whereCommand[b] << endl;
             		}
             		update(commands[1], setCommand, whereCommand);
 
