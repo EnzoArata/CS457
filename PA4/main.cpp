@@ -671,7 +671,7 @@ bool insert(vector <string> tokens)
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	            	
 		            	tempValue.dataMembers.push_back(completedArg);
 
-		            	outfile << completedArg <<" ";
+		            	outfile << removeFrontSpaces(completedArg)  <<" ";
 
 		            }
 		            else
@@ -683,7 +683,7 @@ bool insert(vector <string> tokens)
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
 		          	 	tempValue.dataMembers.push_back(completedArg);
 
-		          	 	outfile << completedArg<<" ";
+		          	 	outfile << removeFrontSpaces(completedArg)<<" ";
 
 		          	 	//cout << completedArg << endl;
 		            }
@@ -727,7 +727,7 @@ bool insert(vector <string> tokens)
             databaseList[useIndex].tables[i].tableValues.push_back(tempValue);
             databaseList[useIndex].tables[i].valuesInserted++;
             cout << "-- 1 new record inserted " << endl;
-		    outfile << completedArg << endl;
+		    outfile << removeFrontSpaces(completedArg) << endl;
 		    outfile.close();
             return 1;
         }
@@ -1112,7 +1112,11 @@ string removeFrontSpaces(string cleanString)
 	
 	for(int i=0; i<cleanString.size();i++)
 	{
-		if(cleanString.at(i) == ' ' || cleanString.at(i) == '\t'/*|| cleanString.at(i) == NULL */)
+		if (isblank(cleanString.at(i) ) )
+		{
+			count++;
+		}
+		else if(cleanString.at(i) == ' ' || cleanString.at(i) == '\t'/*|| cleanString.at(i) == NULL */)
 			count++;
 		else
 			break;
@@ -1873,13 +1877,13 @@ bool synch()
 			        {
 		            	completedArg = currentLine.substr(cursor, k-cursor);  
 		            	//cout << currentLine << endl;          	
-		            	tempValue.dataMembers.push_back(completedArg);
-			            cursor=k++;
+		            	tempValue.dataMembers.push_back(removeFrontSpaces(completedArg));
+			            cursor=k+1;
 			        }
 
 				}
 				completedArg = currentLine.substr(cursor, k-cursor);            	
-				tempValue.dataMembers.push_back(completedArg);	
+				tempValue.dataMembers.push_back(removeFrontSpaces(completedArg));	
 	    		//cout << "wee" << endl;
 	            databaseList[i].tables[tableCount].tableValues.push_back(tempValue);
 	            databaseList[i].tables[tableCount].valuesInserted++;

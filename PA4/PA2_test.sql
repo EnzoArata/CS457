@@ -28,14 +28,14 @@ set name = 'Gizmo'
 where name = 'SuperGizmo';
 
 update Product  
-set price = 14.99 
+set price = 30.99 
 where name = 'Gizmo';
 
 select * from product;
 
 update bepis 
-set weight = 50 
-where height = 9;
+set weight = 20 
+where height = 3;
 
 update bepis 
 set height = 3 
