@@ -5,6 +5,8 @@ CREATE DATABASE CS457_PA3;
 USE CS457_PA3;
 create table Employee(id int, name varchar(10));
 create table Sales(employeeID int, productID int);
+create table Bepis(productName varchar(10), productID int);
+
 
 --Insert new data (0 points; expected to work from PA2)
 insert into Employee values(1,'Joe');
@@ -13,6 +15,10 @@ insert into Employee values(3,'Gill');
 insert into Sales values(1,344);
 insert into Sales values(1,355);
 insert into Sales values(2,544);
+insert into Bepis values('bepCream',344);
+insert into Bepis values('peanuts',355);
+insert into Bepis values('bepis',544);
+insert into Bepis values('wed',420);
 
 -- The following will miss Gill (20 points)
 select * 
@@ -28,6 +34,10 @@ on E.id = S.employeeID;
 select * 
 from Employee E left outer join Sales S 
 on E.id = S.employeeID;
+
+select * 
+from Bepis B left outer join Sales S 
+on B.productID = S.productID;
 
 -- Expected output
 --
