@@ -109,8 +109,11 @@ int main( int argc, char *argv[] ){
 	vector <string> commandQuery;
 	vector <string> nameSelection;
 	vector <string> input;
+	vector <string> setCommand;
+	vector <string> whereCommand;
 	string::size_type sz; 
     ifstream inFile;
+    int updateCount=0;
 	//inFile = fopen(argv[2],"r");
     inFile.open(argv[1]);
     synch();
@@ -301,6 +304,32 @@ int main( int argc, char *argv[] ){
 		else if (commands[0] == "UPDATE")
 		{
 			if (transactionActive){
+				if(commands.size() > 2)
+            	{
+            		updateCount=0;
+            		for(int h=2;h<=5;h++)
+            		{
+            			setCommand.push_back(commands[h]);
+            		}
+            		for(int h=6;h<= 9;h++)
+            		{
+            			whereCommand.push_back(commands[h]);
+            		}
+            		cout << "weee" << endl;
+            		for(int b=0;b<setCommand.size();b++)
+            		{
+            			cout << setCommand[b] << endl;
+            		}
+
+            		for(int b=0;b<whereCommand.size();b++)
+            		{
+            			cout << whereCommand[b] << endl;
+            		}
+            		update(commands[1], setCommand, whereCommand);
+
+            		continue;
+            	}
+
 				inputLine++;
 
             	if (inputLine == input.size()){
@@ -323,7 +352,7 @@ int main( int argc, char *argv[] ){
 		    		
 				}
             	
-            	commands = commandParse(input[inputLine]);
+        		commands = commandParse(input[inputLine]);
             	inputLine++;
             	if (inputLine == input.size()){
 					string command;
@@ -333,6 +362,9 @@ int main( int argc, char *argv[] ){
 
             	commandQuery = commandParse(input[inputLine]);
             	update(nameSelection[0], commands, commandQuery);
+            	
+            	
+            	
 			} else {
 				cout << "cannot update while transaction is not active" << endl;
 			}
