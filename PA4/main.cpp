@@ -49,6 +49,7 @@ bool updateQuery(int tableSelected, vector <string> tokens, vector <string> quer
 bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string> queries);
 
 bool writeTable(int tableSelected);
+bool synch();
 
 
 
@@ -110,6 +111,7 @@ int main( int argc, char *argv[] ){
     ifstream inFile;
 	//inFile = fopen(argv[2],"r");
     inFile.open(argv[1]);
+    synch();
 
    // File input into a vector of strings, igoring lines with "--"
 	string currentLine;
@@ -323,7 +325,6 @@ int main( int argc, char *argv[] ){
 
 		else if (commands[0] == "EXIT")
 		{
-            clearData();
             cout << "-- Exiting program" << endl;
 			return 0;
 		}
@@ -337,6 +338,7 @@ int main( int argc, char *argv[] ){
 			cout << "-- Command not recognized" << endl;
 		}
 	}
+
 	/*string s = "149.99";
 	float tempFloat;
 	//setUppercase()
@@ -412,10 +414,11 @@ bool createDatabase(string name){
     std::string directoryName = "DataBases/";
 	directoryName.append(name);
 
-	if (mkdir(directoryName.c_str(), S_IRUSR | S_IWUSR | S_IXUSR))
-	{
-		//cout << "directory created" << endl;
-	}
+	string newFile = "databaseList";
+    ofstream outfile;
+    outfile.open(newFile, std::ios::app);
+    outfile << name << endl;
+    outfile.close();
 	return 1;
 }
 //Sets database for creating and deleting and altering tables
@@ -480,11 +483,13 @@ bool createTable(vector <string> tokens)
     }
     table tempTable = {tokens[2], t_string};
     string newFile = databaseList[useIndex].name + "-" + tokens[2];
-    cout << newFile << endl;
-    fstream outfile;
+    ofstream outfile;
     outfile.open(newFile, std::ios::app);
-    //outfile << tokens[2] << endl;
     outfile.close();
+    newFile = databaseList[useIndex].name + "-tables";
+    outfile.open(newFile, std::ios::app);
+    outfile << tokens[2] << endl;
+
 	databaseList[useIndex].tables.push_back(tempTable);
     databaseList[useIndex].tableIndex = databaseList[useIndex].tables.size()-1;
     argumentParse(tokens[3]);
@@ -615,7 +620,7 @@ bool insert(vector <string> tokens)
 	values tempValue;
 	string newFile = databaseList[useIndex].name + "-" + tokens[2];
     std::ofstream outfile;
-    outfile.open(newFile, std::ios::app);
+    outfile.open(newFile, ios::app);
     for (int i=0; i<databaseList[useIndex].tables.size(); i++)
     {
         //Finds current table
@@ -643,7 +648,7 @@ bool insert(vector <string> tokens)
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	            	
 		            	tempValue.dataMembers.push_back(completedArg);
 
-		            	outfile << completedArg <<"-";
+		            	outfile << completedArg <<" ";
 
 		            }
 		            else
@@ -655,7 +660,7 @@ bool insert(vector <string> tokens)
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
 		          	 	tempValue.dataMembers.push_back(completedArg);
 
-		          	 	outfile << completedArg<<"-";
+		          	 	outfile << completedArg<<" ";
 
 		          	 	//cout << completedArg << endl;
 		            }
@@ -1697,8 +1702,21 @@ bool outerJoin(vector <string> Atributes,string firstTable, string secondTable ,
 
 bool writeTable(int tableSelected)
 {
+	if(tableSelected>databaseList[useIndex].tables.size())
+		return false;
+	if(databaseList[useIndex].tables.size() ==0)
+		return false;
+
 	string newFile = databaseList[useIndex].name + "-" + databaseList[useIndex].tables[tableSelected].name;
     std::ofstream outfile(newFile);
+    for(int p=0;p<databaseList[useIndex].tables[tableSelected].arguments.size();p++)
+    {
+    	outfile << databaseList[useIndex].tables[tableSelected].arguments[p];
+    	if(p ==databaseList[useIndex].tables[tableSelected].arguments.size() -1 )
+    		outfile << endl;
+    	else
+    		outfile << ".";
+    }
     for(int i=0; i<databaseList[useIndex].tables[tableSelected].tableValues.size();i++)
     {
     	for(int j=0;j<databaseList[useIndex].tables[tableSelected].tableValues[i].dataMembers.size();j++)
@@ -1707,10 +1725,114 @@ bool writeTable(int tableSelected)
     		if(j==databaseList[useIndex].tables[tableSelected].tableValues[i].dataMembers.size()-1)
     			outfile << endl;
     		else
-    			outfile << "-";
+    			outfile << " ";
     	}
     }
 
     outfile.close();
 }
 
+bool synch()
+{
+
+	values tempValue;
+	string completedArg;
+	vector <string> commands;
+	vector <table> emptyVec;
+	vector <string> t_string;
+	string currentLine;
+	string newFile = "databaseList";
+    ifstream inFile;
+    ifstream tableFile;
+    string tempString;
+    int cursor =0;
+    inFile.open(newFile);
+    int k = 0;
+    int y =0;
+    int tableCount = 0;
+    int dataBaseCount = 0;
+    while(getline(inFile, currentLine))
+    {
+
+    	dataBase tempData = {currentLine, emptyVec, -1};
+		databaseList.push_back(tempData);
+		
+	}
+    inFile.close();
+
+
+    
+    for(int i=0; i< databaseList.size();i++)
+    {
+    	newFile = databaseList[i].name + "-tables";
+    	inFile.open(newFile);
+    	while(getline(inFile, currentLine))
+	    {
+	    	newFile = databaseList[i].name + "-" + currentLine;
+	    	tableFile.open(newFile);
+	    	table tempTable = {currentLine, t_string};
+			databaseList[i].tables.push_back(tempTable);
+    		databaseList[i].tableIndex = databaseList[i].tables.size()-1;
+    		getline(tableFile, currentLine);
+
+    		cursor = 0;
+    		for( y=0;y<currentLine.size();y++)
+    		{
+
+    			if(currentLine.at(y) == '.')
+    			{
+    				tempString = currentLine.substr(cursor, y-cursor);
+    				
+    				databaseList[i].tables[tableCount].arguments.push_back(tempString);
+    				cursor = y+1;
+    			}
+    			
+    		}
+    		tempString = currentLine.substr(cursor, y-cursor);
+    		
+    		databaseList[i].tables[tableCount].arguments.push_back(tempString);
+    		cursor =0;
+    		
+
+	    	while(getline(tableFile,currentLine))
+	    	{
+	    		//cout << currentLine << endl;
+	    		cursor = 0;
+	    		for(k=0; k < currentLine.size();k++)
+			    {
+
+			        if(currentLine.at(k) == ' ' )
+			        {
+		            	completedArg = currentLine.substr(cursor, k-cursor);  
+		            	cout << currentLine << endl;          	
+		            	tempValue.dataMembers.push_back(completedArg);
+			            cursor=k++;
+			        }
+
+				}
+				completedArg = currentLine.substr(cursor, k-cursor);            	
+				tempValue.dataMembers.push_back(completedArg);	
+	    		//cout << "wee" << endl;
+	            databaseList[i].tables[tableCount].tableValues.push_back(tempValue);
+	            databaseList[i].tables[tableCount].valuesInserted++;
+	            tempValue.dataMembers.clear();
+
+
+
+	    	}
+	    	
+	    	tableFile.close();
+	    	tableCount++;
+	    	
+	
+		}
+		
+	   // cout << "wee" << endl;
+	    inFile.close();
+
+    }
+    useIndex = 0;
+    //cout << "wee" << endl;
+    //writeTable(0);
+    //writeTable(1);
+}
