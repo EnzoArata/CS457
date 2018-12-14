@@ -8,7 +8,10 @@
 #include <string>
 //#include <stdlib.h>
 
+
 #include <stdio.h>
+
+
 #include <sys/stat.h>
 #include <iostream>
 #include <fstream>
@@ -19,7 +22,6 @@
 #include <functional>
 #include <cctype>
 #include <algorithm> 
-
 
 using namespace std;
 
@@ -45,7 +47,9 @@ bool deleteQuery(int tableSelected, vector <string> tokens);
 bool update(string tableName, vector <string> tokens, vector <string> queries );
 bool updateQuery(int tableSelected, vector <string> tokens, vector <string> queries);
 bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string> queries);
+
 bool writeTable(int tableSelected);
+
 
 
 
@@ -119,14 +123,59 @@ int main( int argc, char *argv[] ){
 
 
     //loop that runs on number of strings collected from file
-	for(int inputLine = 0; inputLine < input.size(); inputLine++)
+
+	for(int inputLine = 0; inputLine < input.size()+1; inputLine++)
 	{
+		if (inputLine == input.size()){
+			string command;
+			getline(cin, command);
+			input.push_back(setUppercase(command+" "));
+		}
 
         //Calls on parsing function for current input line
 		commands = commandParse(input[inputLine]);
 		nameSelection.clear();
 		//cout << commands.size() << endl;
         //Checks tokens of string to decipher command
+
+		if (commands[0] == "BEGIN")
+		{
+			if (commands[1] == "TRANSACTION"){
+				cout << "starting transaction" << endl;
+				inputLine++;
+				if (inputLine == input.size()){
+					string command;
+					getline(cin, command);
+
+					input.push_back(setUppercase(command+" "));
+				}
+				commands = commandParse(input[inputLine]);
+				int transactionSize = 0;
+				while(commands[0] != "COMMIT"){
+					inputLine++;
+					transactionSize++;
+					if (inputLine == input.size()){
+						string command;
+						getline(cin, command);
+
+						input.push_back(setUppercase(command+" "));
+					}
+					commands = commandParse(input[inputLine]);
+				}
+				inputLine -= transactionSize;
+				input.pop_back();
+
+				cout << "ending transaction" << endl;
+			}
+			else {
+				cout << "-- The command: " << input[inputLine] << endl;
+				cout << "-- could not be recognized" << endl;
+				continue;
+			}
+
+
+		} 
+
 		if (commands[0] == "CREATE")
 		{
 			if (commands[1] == "DATABASE")
@@ -178,8 +227,20 @@ int main( int argc, char *argv[] ){
 				{
 					
 					inputLine++;
+
+					if (inputLine == input.size()){
+						string command;
+						getline(cin, command);
+						input.push_back(setUppercase(command+" "));
+					}
 					commands = commandParse(input[inputLine]);
 					inputLine++;
+					if (inputLine == input.size()){
+						string command;
+						getline(cin, command);
+						input.push_back(setUppercase(command+" "));
+					}
+
 					selectJoin(commands,commandParse(input[inputLine]));
 					continue;
 				}
@@ -197,9 +258,21 @@ int main( int argc, char *argv[] ){
             }
             nameSelection.push_back(commands[2]);
             inputLine++;
+
+            if (inputLine == input.size()){
+				string command;
+				getline(cin, command);
+				input.push_back(setUppercase(command+" "));
+			}
             commands = commandParse(input[inputLine]);
             if (commands[0] == "FROM"){
             	inputLine++;
+            	if (inputLine == input.size()){
+					string command;
+					getline(cin, command);
+					input.push_back(setUppercase(command+" "));
+				}
+
             	selectFromQuery(nameSelection,commands[1],commandParse(input[inputLine]));
             }
 		}
@@ -210,6 +283,13 @@ int main( int argc, char *argv[] ){
 			if (commands[1] == "FROM")
             {
             	inputLine++;
+
+            	if (inputLine == input.size()){
+					string command;
+					getline(cin, command);
+					input.push_back(setUppercase(command+" "));
+				}
+
             	nameSelection.push_back(commands[2]);
             	commands = commandParse(input[inputLine]);
             	deleteFrom(nameSelection[0], commands);
@@ -220,9 +300,21 @@ int main( int argc, char *argv[] ){
 		else if (commands[0] == "UPDATE")
 		{
             	inputLine++;
+
+            	if (inputLine == input.size()){
+					string command;
+					getline(cin, command);
+					input.push_back(setUppercase(command+" "));
+				}
             	nameSelection.push_back(commands[1]);
             	commands = commandParse(input[inputLine]);
             	inputLine++;
+            	if (inputLine == input.size()){
+					string command;
+					getline(cin, command);
+					input.push_back(setUppercase(command+" "));
+				}
+
             	commandQuery = commandParse(input[inputLine]);
             	update(nameSelection[0], commands, commandQuery);
   
@@ -319,11 +411,11 @@ bool createDatabase(string name){
 
     std::string directoryName = "DataBases/";
 	directoryName.append(name);
+
 	if (mkdir(directoryName.c_str(), S_IRUSR | S_IWUSR | S_IXUSR))
 	{
-		cout << "directory created" << endl;
+		//cout << "directory created" << endl;
 	}
-	
 	return 1;
 }
 //Sets database for creating and deleting and altering tables
@@ -550,7 +642,9 @@ bool insert(vector <string> tokens)
 		            	//setUppercase()
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));	            	
 		            	tempValue.dataMembers.push_back(completedArg);
+
 		            	outfile << completedArg <<"-";
+
 		            }
 		            else
 		            {
@@ -560,7 +654,9 @@ bool insert(vector <string> tokens)
 		            	//setUppercase()
 		            	//transform(completedArg.begin(), completedArg.end(), completedArg.begin(), std::ptr_fun<int, int>(std::toupper));
 		          	 	tempValue.dataMembers.push_back(completedArg);
+
 		          	 	outfile << completedArg<<"-";
+
 		          	 	//cout << completedArg << endl;
 		            }
 		            cursor=k++;
@@ -603,7 +699,6 @@ bool insert(vector <string> tokens)
             databaseList[useIndex].tables[i].tableValues.push_back(tempValue);
             databaseList[useIndex].tables[i].valuesInserted++;
             cout << "-- 1 new record inserted " << endl;
-            
 		    outfile << completedArg << endl;
 		    outfile.close();
             return 1;
@@ -1057,7 +1152,7 @@ bool updateQuery(int tableSelected,  vector <string> queries, vector <string> to
 	string::size_type sz; 
 	float tempFloat;
 	float tempFloat2;
-	
+
 
 	if(tokens[0] == "WHERE")
 	{
@@ -1145,7 +1240,6 @@ bool updateQuery(int tableSelected,  vector <string> queries, vector <string> to
 			cout << "--" << changes << " record modified" << endl;
 		else
 			cout << "--" << changes << " records modified" << endl;
-
 		
 		writeTable(tableSelected);
 
@@ -1600,6 +1694,7 @@ bool outerJoin(vector <string> Atributes,string firstTable, string secondTable ,
 	return 1;
 }
 
+
 bool writeTable(int tableSelected)
 {
 	string newFile = databaseList[useIndex].name + "-" + databaseList[useIndex].tables[tableSelected].name;
@@ -1618,3 +1713,4 @@ bool writeTable(int tableSelected)
 
     outfile.close();
 }
+
