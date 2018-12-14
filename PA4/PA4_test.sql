@@ -9,7 +9,9 @@ create table Flights(seat int, status int);
 insert into Flights values(22,0);
 insert into Flights values(23,1);
 begin transaction;
-update flights set status = 1 where seat = 22;
+update flights 
+set status = 1 
+where seat = 22;
 
 -- On P2:
 USE CS457_PA4;

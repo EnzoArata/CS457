@@ -50,6 +50,7 @@ bool changeData(int tableSelected, int tableEntry, int dataEntry, vector <string
 
 bool writeTable(int tableSelected);
 bool synch();
+bool updateLock();
 
 
 
@@ -96,7 +97,8 @@ void printNullValues(int tableIndex, int valueIndex);
 void printQueryTable(values currentEntry, std::vector <string> Attributes, int tableSelected);
 
 vector <dataBase> databaseList;
-
+vector <string> LockedTables; 
+vector <string> existingLocks;
 
 
 
@@ -125,9 +127,10 @@ int main( int argc, char *argv[] ){
 
 
     //loop that runs on number of strings collected from file
-
+	bool transactionActive = false;
 	for(int inputLine = 0; inputLine < input.size()+1; inputLine++)
 	{
+		updateLock();
 		if (inputLine == input.size()){
 			string command;
 			getline(cin, command);
@@ -142,7 +145,7 @@ int main( int argc, char *argv[] ){
 
 		if (commands[0] == "BEGIN")
 		{
-			if (commands[1] == "TRANSACTION"){
+			if (commands[1] == "TRANSACTION" || commands[1] == "TRANSACTION;"){
 				cout << "starting transaction" << endl;
 				inputLine++;
 				if (inputLine == input.size()){
@@ -152,22 +155,8 @@ int main( int argc, char *argv[] ){
 					input.push_back(setUppercase(command+" "));
 				}
 				commands = commandParse(input[inputLine]);
-				int transactionSize = 0;
-				while(commands[0] != "COMMIT"){
-					inputLine++;
-					transactionSize++;
-					if (inputLine == input.size()){
-						string command;
-						getline(cin, command);
+				transactionActive = true;
 
-						input.push_back(setUppercase(command+" "));
-					}
-					commands = commandParse(input[inputLine]);
-				}
-				inputLine -= transactionSize;
-				input.pop_back();
-
-				cout << "ending transaction" << endl;
 			}
 			else {
 				cout << "-- The command: " << input[inputLine] << endl;
@@ -177,6 +166,14 @@ int main( int argc, char *argv[] ){
 
 
 		} 
+
+		if (commands[0] == "COMMIT" || commands[0] == "COMMIT;"){
+			transactionActive = false;
+			cout << "ending transaction" << endl;
+		}
+
+
+
 
 		if (commands[0] == "CREATE")
 		{
@@ -309,6 +306,15 @@ int main( int argc, char *argv[] ){
 					input.push_back(setUppercase(command+" "));
 				}
             	nameSelection.push_back(commands[1]);
+                if(find(existingLocks.begin(), existingLocks.end(), commands[1]) != existingLocks.end()) {
+		   			/* v contains x */
+		   			cout << "-- Cannot edit this table because it is locked!" << endl;
+		   			continue;
+				} else {
+		    		/* v does not contain x */
+		    		LockedTables.push_back(commands[1]);
+				}
+            	
             	commands = commandParse(input[inputLine]);
             	inputLine++;
             	if (inputLine == input.size()){
@@ -1730,6 +1736,50 @@ bool writeTable(int tableSelected)
     }
 
     outfile.close();
+    return true;
+}
+
+bool updateLock()
+{
+	string lockFile = "Locked_Tables";
+	ifstream lockData;
+	lockData.open (lockFile, std::ifstream::in);
+    if (!lockData.is_open())
+    	cout << "input file not opened!!!" << endl;
+   // File input into a vector of strings, igoring lines with "--"
+	string currentLock;
+	//cout << "checking locks" << endl;
+	existingLocks.clear();
+	while(getline(lockData, currentLock)){
+       // cout << currentLine << endl;
+        if(find(LockedTables.begin(), LockedTables.end(), currentLock) != LockedTables.end()) {
+		    /* v contains x */
+		} else {
+		    /* v does not contain x */
+		    existingLocks.push_back(setUppercase(currentLock));
+		}
+	}
+	lockData.close();
+
+	ofstream lockOutput;
+	lockOutput.open (lockFile, std::ofstream::trunc);
+
+    if (!lockOutput.is_open())
+    	cout << "output file not opened!!!" << endl;
+
+    for(int i=0; i<existingLocks.size();i++)
+    {
+    	lockOutput << existingLocks[i] << endl;
+    	//cout << "writing existing lock" << endl;
+    }
+    for(int i=0; i<LockedTables.size();i++)
+    {
+    	lockOutput << LockedTables[i] << endl;
+    	cout << "writing new lock" << endl;
+    }
+
+    lockOutput.close();
+    return true;
 }
 
 bool synch()
@@ -1804,7 +1854,7 @@ bool synch()
 			        if(currentLine.at(k) == ' ' )
 			        {
 		            	completedArg = currentLine.substr(cursor, k-cursor);  
-		            	cout << currentLine << endl;          	
+		            	//cout << currentLine << endl;          	
 		            	tempValue.dataMembers.push_back(completedArg);
 			            cursor=k++;
 			        }
