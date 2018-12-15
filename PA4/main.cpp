@@ -99,6 +99,7 @@ void printQueryTable(values currentEntry, std::vector <string> Attributes, int t
 vector <dataBase> databaseList;
 vector <string> LockedTables; 
 vector <string> existingLocks;
+vector <int> uncomittedTables;
 
 
 
@@ -135,11 +136,13 @@ int main( int argc, char *argv[] ){
 	bool transactionActive = false;
 	for(int inputLine = 0; inputLine < input.size()+1; inputLine++)
 	{
+
 		if (inputLine == input.size()){
 			string command;
 			getline(cin, command);
 			input.push_back(setUppercase(command+" "));
 		}
+
 
         //Calls on parsing function for current input line
 		commands = commandParse(input[inputLine]);
@@ -163,8 +166,8 @@ int main( int argc, char *argv[] ){
 
 			}
 			else {
-				cout << "-- The command: " << input[inputLine] << endl;
-				cout << "-- could not be recognized" << endl;
+				cout << "--The command: " << input[inputLine] << endl;
+				cout << "--Could not be recognized" << endl;
 				continue;
 			}
 
@@ -172,9 +175,18 @@ int main( int argc, char *argv[] ){
 		} 
 
 		if (commands[0] == "COMMIT" || commands[0] == "COMMIT;"){
+			if (!transactionActive){
+				cout << "--No current transaction." << endl;
+				continue;
+			}
 			transactionActive = false;
 			updateLock(1);
-			cout << "-- commiting transaction" << endl;
+			for (int i = 0; i<uncomittedTables.size();i++)
+				writeTable(uncomittedTables[i]);
+			uncomittedTables.clear();
+			cout << "--Commiting transaction" << endl;
+			continue;
+
 		}
 
 
@@ -305,21 +317,23 @@ int main( int argc, char *argv[] ){
 		{
 			if (transactionActive){
 				//Check to see format of Update Line
-				if(commands.size() > 2)
+			    if(find(existingLocks.begin(), existingLocks.end(), commands[1]) != existingLocks.end()) {
+		   			/* v contains x */
+		   			cout << "--Cannot edit this table because it is locked!" << endl;
+		   			continue;
+				} else {
+					if(find(LockedTables.begin(), LockedTables.end(), commands[1]) != LockedTables.end()) {
+		   			/* v contains x */
+		   			} else {
+						/* v does not contain x */
+		    			LockedTables.push_back(commands[1]);
+		   			}
+		   			updateLock(0);
+		    		
+				}
+				if (commands[2] == "SET")
             	{
-            		/*if(find(existingLocks.begin(), existingLocks.end(), commands[1]) != existingLocks.end()) {
-			   			/* v contains x */
-			   		/*	cout << "-- Cannot edit this table because it is locked!" << endl;
-			   			continue;
-					} else {
-						if(find(LockedTables.begin(), LockedTables.end(), commands[1]) != LockedTables.end()) {
-			   			/* v contains x */
-			   		/*	} else {
-							/* v does not contain x */
-			    	/*		LockedTables.push_back(commands[1]);
-			   			}
-			    		
-					}*/
+
             		updateCount=0;
             		for(int h=2;h<=5;h++)
             		{
@@ -342,19 +356,6 @@ int main( int argc, char *argv[] ){
 					input.push_back(setUppercase(command+" "));
 				}
             	nameSelection.push_back(commands[1]);
-                if(find(existingLocks.begin(), existingLocks.end(), commands[1]) != existingLocks.end()) {
-		   			/* v contains x */
-		   			cout << "-- Cannot edit this table because it is locked!" << endl;
-		   			continue;
-				} else {
-					if(find(LockedTables.begin(), LockedTables.end(), commands[1]) != LockedTables.end()) {
-		   			/* v contains x */
-		   			} else {
-						/* v does not contain x */
-		    			LockedTables.push_back(commands[1]);
-		   			}
-		    		
-				}
             	
         		commands = commandParse(input[inputLine]);
             	inputLine++;
@@ -370,7 +371,7 @@ int main( int argc, char *argv[] ){
             	
             	
 			} else {
-				cout << "cannot update while transaction is not active" << endl;
+				cout << "--Cannot update while transaction is not active" << endl;
 			}
 
   
@@ -379,7 +380,7 @@ int main( int argc, char *argv[] ){
 
 		else if (commands[0] == "EXIT")
 		{
-            cout << "-- Exiting program" << endl;
+            cout << "--Exiting program" << endl;
             updateLock(1);
 
 			return 0;
@@ -391,7 +392,7 @@ int main( int argc, char *argv[] ){
 		}
 
 		else {
-			cout << "-- Command not recognized" << endl;
+			cout << "--Command not recognized" << endl;
 		}
 		updateLock(0);
 
@@ -462,11 +463,11 @@ bool createDatabase(string name){
 
 	for (int i=0; i<databaseList.size(); i++){
 		if (name == databaseList[i].name){
-			cout << "-- !Failed to create datatabase " << name << " because it already exists" << endl;
+			cout << "--!Failed to create datatabase " << name << " because it already exists" << endl;
 			return 0;
 		}
 	}
-	cout << "-- Database " << name << " created." << endl;
+	cout << "--Database " << name << " created." << endl;
     dataBase tempData = {name, emptyVec, -1};
 	databaseList.push_back(tempData);
 
@@ -486,11 +487,11 @@ bool use(string name){
 		if (name == databaseList[i].name){
 			useIndex = i;
 			databaseList[useIndex].tableIndex = -1;
-			cout << "-- Using Database " << name << "." << endl;
+			cout << "--Using Database " << name << "." << endl;
 			return 1;
 		}
 	}
-	cout << "-- !Failed to use datatabase " << name << " because it dosent exist" << endl;
+	cout << "--!Failed to use datatabase " << name << " because it dosent exist" << endl;
 	return 0;
 }
 //Deletes data base if it exists
@@ -503,19 +504,19 @@ bool dropDatabase(string name)
             directoryName.append(name);
             databaseList.erase(databaseList.begin()+i);
             rmdir(directoryName.c_str());
-			cout << "-- Database " << name << " deleted." << endl;
+			cout << "--Database " << name << " deleted." << endl;
 			useIndex = -1;
 			return 0;
 		}
 	}
-	cout << "-- !Failed to drop datatabase " << name << " because it does not exist" << endl;
+	cout << "--!Failed to drop datatabase " << name << " because it does not exist" << endl;
     return 0;
 }
 
 //Clears directories
 bool clearData()
 {
-    cout << "-- Deleting Databases....." << endl;
+    cout << "--Deleting Databases....." << endl;
     std::string directoryName = "DataBases/";
     for (int i=0; i<databaseList.size(); i++){
         directoryName.append(databaseList[i].name);
@@ -530,13 +531,13 @@ bool createTable(vector <string> tokens)
     vector <string> t_string;
     if(useIndex == -1 )
     {
-        cout << "-- !Failed to create table because no database has been selected" << endl;
+        cout << "--!Failed to create table because no database has been selected" << endl;
         return 0 ;
     }
     for (int i=0; i<databaseList[useIndex].tables.size(); i++){
         if(tokens[2] == databaseList[useIndex].tables[i].name)
         {
-            cout << "-- !Failed to create table " << tokens[2] << " because it already exists" << endl;
+            cout << "--!Failed to create table " << tokens[2] << " because it already exists" << endl;
 			return 0;
         }
     }
@@ -595,7 +596,7 @@ bool argumentParse(string t_arg)
 	//cout << chopped << endl;
     databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.push_back(chopped);
 
-    cout << "-- Table " << databaseList[useIndex].tables[databaseList[useIndex].tableIndex].name << " created." << endl;
+    cout << "--Table " << databaseList[useIndex].tables[databaseList[useIndex].tableIndex].name << " created." << endl;
     /*for(int p =0; p<databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments.size();p++)
     {
     	cout << databaseList[useIndex].tables[databaseList[useIndex].tableIndex].arguments[p] << endl;
@@ -611,12 +612,12 @@ bool dropTable(string name)
 		if (name == databaseList[useIndex].tables[i].name){
             databaseList[useIndex].tables.erase(databaseList[useIndex].tables.begin()+i);
 
-			cout << "-- Table " << name << " deleted." << endl;
+			cout << "--Table " << name << " deleted." << endl;
 			return 0;
 		}
 	}
 	databaseList[useIndex].tableIndex = -1;
-	cout << "-- !Failed to drop table " << name << " because it does not exist" << endl;
+	cout << "--!Failed to drop table " << name << " because it does not exist" << endl;
     return 0;
 }
 //Prints out data that exists in given table
@@ -630,7 +631,7 @@ bool dropTable(string name)
 
         if(name == databaseList[useIndex].tables[j].name)
         {
-            cout << "-- " ;
+            cout << "--" ;
             for(int k =0;k<databaseList[useIndex].tables[j].arguments.size(); k++ )
             {
                 if(k>0)
@@ -642,7 +643,7 @@ bool dropTable(string name)
             return 1;
         }
     }
-    cout << "-- !Failed to query table " << name << " because it does not exist" << endl;
+    cout << "--!Failed to query table " << name << " because it does not exist" << endl;
     return 0;
 }*/
 
@@ -656,14 +657,14 @@ bool add(vector <string> tokens)
             joinedString = tokens[4] + tokens[5];
             //databaseList[useIndex].tables[i].args++;
             databaseList[useIndex].tables[i].arguments.push_back(joinedString);
-             cout << "-- Table " << tokens[2] << " modified." << endl;
+             cout << "--Table " << tokens[2] << " modified." << endl;
             return 1;
 
         }
 
 
     }
-    cout << "-- !Failed to alter table " << tokens[2] << " because it does not exist" << endl;
+    cout << "--!Failed to alter table " << tokens[2] << " because it does not exist" << endl;
     return 0;
 
 
@@ -762,13 +763,13 @@ bool insert(vector <string> tokens)
     		tempValue.dataMembers.push_back(completedArg);
             databaseList[useIndex].tables[i].tableValues.push_back(tempValue);
             databaseList[useIndex].tables[i].valuesInserted++;
-            cout << "-- 1 new record inserted " << endl;
+            cout << "--1 new record inserted " << endl;
 		    outfile << removeFrontSpaces(completedArg) << endl;
 		    outfile.close();
             return 1;
         }
     }
-    cout << "-- !Failed to alter table " << tokens[2] << " because it does not exist" << endl;
+    cout << "--!Failed to alter table " << tokens[2] << " because it does not exist" << endl;
     return 0;
 
 }
@@ -788,7 +789,7 @@ bool selectFrom(vector <string> tokens)
 			return 1;
         }
     }
-    cout << "-- !Failed to print table " << tokens[3] << " because it does not exist" << endl;
+    cout << "--!Failed to print table " << tokens[3] << " because it does not exist" << endl;
     return 0;
 
 }
@@ -904,7 +905,7 @@ bool selectFromQuery(vector <string> Atributes, string Name, vector <string> tok
 			return 1;
         }
     }
-    cout << "-- !Failed to print table " << tokens[3] << " because it does not exist" << endl;
+    cout << "--!Failed to print table " << tokens[3] << " because it does not exist" << endl;
     return 0;
 
 }
@@ -1020,7 +1021,7 @@ bool deleteFrom(string tableName, vector <string> tokens )
         }
 
     }
-    cout << "-- !Failed to delete from table " << tableName << " because it does not exist" << endl;
+    cout << "--!Failed to delete from table " << tableName << " because it does not exist" << endl;
     return 0;
 
 
@@ -1138,7 +1139,7 @@ bool deleteQuery(int tableSelected, vector <string> tokens)
 
 
 	}
-	cout << "-- !Failed to delete from table " << databaseList[useIndex].tables[tableSelected].name << " because no matching query" << endl;
+	cout << "--!Failed to delete from table " << databaseList[useIndex].tables[tableSelected].name << " because no matching query" << endl;
     return 0;
 }
 //Removes spaces from beginning of strings
@@ -1174,6 +1175,8 @@ vector <string> splitString(string inputString)
 		if(inputString.at(i) == ' ')
 		{
 			chop = inputString.substr(0, i);
+			if (chop.at(0) == '(')
+				chop = chop.substr(1, i-1);
 			break;
 		}
 	}
@@ -1208,7 +1211,7 @@ bool update(string tableName, vector <string> tokens, vector <string> queries )
         }
 
     }
-    cout << "-- !Failed to update table " << tableName << " because it does not exist" << endl;
+    cout << "--!Failed to update table " << tableName << " because it does not exist" << endl;
     return 0;
 	
 }
@@ -1233,6 +1236,7 @@ bool updateQuery(int tableSelected,  vector <string> queries, vector <string> to
 			//transform(newString[0].begin(), newString[0].end(), newString[0].begin(), std::ptr_fun<int, int>(std::toupper));
 			tokens[3] = setUppercase(tokens[3]);
 			//transform(tokens[3].begin(), tokens[3].end(), tokens[3].begin(), std::ptr_fun<int, int>(std::toupper));
+			//cout << tokens[1] <<" "<< newString[0]<< endl;
 			if(tokens[1] == newString[0])
 			{
 
@@ -1240,6 +1244,7 @@ bool updateQuery(int tableSelected,  vector <string> queries, vector <string> to
 				tokens[3] = removeEnd(tokens[3]);
 				tokens[3] = removeFrontSpaces(tokens[3]);
 				
+				//cout << tokens[2].at(0) << endl;
 				if(tokens[2].at(0) == '=' )
 				{
 
@@ -1309,13 +1314,14 @@ bool updateQuery(int tableSelected,  vector <string> queries, vector <string> to
 		else
 			cout << "--" << changes << " records modified" << endl;
 		
-		writeTable(tableSelected);
+		uncomittedTables.push_back(tableSelected);
+		//writeTable(tableSelected);
 
 		return 1;
 
 
 	}
-	cout << "-- !Failed to update from table " << databaseList[useIndex].tables[tableSelected].name << " because no matching query" << endl;
+	cout << "--!Failed to update from table " << databaseList[useIndex].tables[tableSelected].name << " because no matching query" << endl;
     return 0;
 	return 0;
 }
@@ -1387,7 +1393,7 @@ bool selectJoin(vector <string> Atributes, vector <string> tokens)
 	        }
 
 	    }
-	    cout << "-- !Failed to print from table " << Atributes[1] << " because it does not exist" << endl;
+	    cout << "--!Failed to print from table " << Atributes[1] << " because it does not exist" << endl;
 	    return 0;
 	}
 	return 1;
@@ -1803,7 +1809,7 @@ bool updateLock(bool clear)
 	ifstream lockData;
 	lockData.open (lockFile, std::ifstream::in);
     if (!lockData.is_open())
-    	cout << "input file not opened!!!" << endl;
+    	cout << "Locked_Tables deoes not exist creating new file" << endl;
    // File input into a vector of strings, igoring lines with "--"
 	string currentLock;
 	//cout << "checking locks" << endl;
@@ -1825,7 +1831,7 @@ bool updateLock(bool clear)
 	lockOutput.open (lockFile, std::ofstream::trunc);
 
     if (!lockOutput.is_open())
-    	cout << "output file not opened!!!" << endl;
+    	cout << "Locked_Tables does not exist creating a new one" << endl;
 
     for(int i=0; i<existingLocks.size();i++)
     {
