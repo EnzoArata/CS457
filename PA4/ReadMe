@@ -1,8 +1,10 @@
 ###BUILD INSTRUCTIONS
 -Make and compile by running "g++ main.cpp" in the terminal
 ###RUNNING THE PROGRAM
+-Use command "./a.out"
+	-Awaits terminal commands
 -Use command "./a.out PA1_test.sql"
+	-Will load commands from input file and then wait input terminal commands
 
 
-####SPECIAL INSTRUCTIONS
--according to the PA4_test doc the update command was changed to be a single line command instead of a 3 line one this causes some problems in our codebase that would take major refactoring to fix so for testing if you need to use the old format for the code to work
+
